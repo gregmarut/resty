@@ -1,0 +1,137 @@
+/*******************************************************************************
+ * Copyright (c) 2014 Greg Marut.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * Contributors:
+ * Greg Marut - initial API and implementation
+ ******************************************************************************/
+package com.gregmarut.resty.client;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+
+import com.gregmarut.resty.client.annotation.RestMethod;
+import com.gregmarut.resty.client.annotation.RestProxy;
+import com.gregmarut.resty.client.exception.InvalidProxyException;
+import com.gregmarut.resty.client.http.HostDetails;
+
+public class RestProxyFactory
+{
+	// holds the factory that will handle new and existing clients
+	private final HttpClientFactory httpClientFactory;
+	
+	// holds the invocation handler
+	private final RestInvocationHandler restInvocationHandler;
+	
+	public RestProxyFactory(final String hostUrl)
+	{
+		httpClientFactory = new HttpClientFactory();
+		this.restInvocationHandler = new JSONInvocationHandler(httpClientFactory, hostUrl);
+	}
+	
+	public RestProxyFactory(final HostDetails hostDetails)
+	{
+		httpClientFactory = new HttpClientFactory();
+		this.restInvocationHandler = new JSONInvocationHandler(httpClientFactory, hostDetails.getUrl());
+	}
+	
+	public RestProxyFactory(final RestInvocationHandler restInvocationHandler)
+	{
+		httpClientFactory = restInvocationHandler.getHttpClientFactory();
+		this.restInvocationHandler = restInvocationHandler;
+	}
+	
+	/**
+	 * Sets the HTTP authentication credentials
+	 * 
+	 * @param username
+	 * @param password
+	 */
+	public void setHttpAuthenticationCredentials(final String username, final String password)
+	{
+		httpClientFactory.setBasicCredentials(new UsernamePasswordCredentials(username, password), AuthScope.ANY);
+	}
+	
+	public void eraseHttpAuthenticationCredentials()
+	{
+		httpClientFactory.setBasicCredentials(null, null);
+	}
+	
+	public void eraseCookies()
+	{
+		httpClientFactory.eraseCookies();
+	}
+	
+	/**
+	 * Creates a proxy of the specified interface. Interface must be properly annotated with
+	 * {@link RestProxy}.
+	 * 
+	 * @param clazz
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> T createProxy(final Class<T> clazz)
+	{
+		// check to see if this class is not an interface
+		if (!clazz.isInterface())
+		{
+			throw new InvalidProxyException(clazz.getName() + " must be an interface.");
+		}
+		
+		// retrieve the RestProxy annotation from the class
+		RestProxy restProxy = clazz.getAnnotation(RestProxy.class);
+		
+		// make sure that this annotation is not null
+		if (null == restProxy)
+		{
+			throw new InvalidProxyException(clazz.getName() + " is missing annotation " + RestProxy.class.getName());
+		}
+		
+		// check to see if this interface should be strictly checked
+		if (restProxy.strict())
+		{
+			// get a list of all of the methods declared on this class
+			Method[] methods = clazz.getDeclaredMethods();
+			
+			// for each method on the interface
+			for (Method method : methods)
+			{
+				// get the rest method annotation
+				RestMethod restMethod = method.getAnnotation(RestMethod.class);
+				
+				// check to see if this annotation is null
+				if (null == restMethod)
+				{
+					throw new InvalidProxyException(clazz.getName() + "." + method.getName()
+						+ " is missing annotation " + RestMethod.class.getName());
+				}
+			}
+		}
+		
+		// create and return a new instance of the proxy
+		return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[]
+		{
+			clazz
+		}, restInvocationHandler);
+	}
+	
+	public HttpClientFactory getHttpClientFactory()
+	{
+		return httpClientFactory;
+	}
+	
+	/**
+	 * Sets the class that represents an error entity
+	 * 
+	 * @param errorClass
+	 */
+	public void setErrorClass(Class<?> errorClass)
+	{
+		restInvocationHandler.setErrorClass(errorClass);
+	}
+}
