@@ -4,6 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.gregmarut.resty.client.RestProxyFactory;
+import com.gregmarut.resty.client.exception.WebServiceException;
 import com.gregmarut.resty.client.http.HostDetails;
 import com.gregmarut.resty.client.http.Scheme;
 
@@ -21,7 +22,7 @@ public class SimpleIT
 	}
 	
 	@Test
-	public void getOneTest()
+	public void getOneTest() throws WebServiceException
 	{
 		int result = simpleProxy.getOne();
 		
@@ -29,10 +30,20 @@ public class SimpleIT
 	}
 	
 	@Test
-	public void getOneTwo()
+	public void getTwoTest() throws WebServiceException
 	{
 		int result = simpleProxy.getTwo();
 		
 		Assert.assertEquals(2, result);
+	}
+	
+	@Test
+	public void getValueTest() throws WebServiceException
+	{
+		final int value = 42;
+		
+		int result = simpleProxy.getValue(value);
+		
+		Assert.assertEquals(value, result);
 	}
 }
