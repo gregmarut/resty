@@ -19,7 +19,7 @@ import com.gregmarut.resty.client.annotation.RestMethod;
 import com.gregmarut.resty.client.annotation.RestProxy;
 import com.gregmarut.resty.client.exception.WebServiceException;
 
-@RestProxy
+@RestProxy(strict=true)
 public interface TestInterfaceProxy
 {
 	@RestMethod(uri = "/test", method = MethodType.GET)
