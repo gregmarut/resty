@@ -18,6 +18,7 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import com.gregmarut.resty.client.annotation.RestMethod;
 import com.gregmarut.resty.client.annotation.RestProxy;
 import com.gregmarut.resty.client.exception.InvalidProxyException;
+import com.gregmarut.resty.client.exception.WebServiceException;
 import com.gregmarut.resty.client.http.HostDetails;
 
 public class RestProxyFactory
@@ -110,6 +111,9 @@ public class RestProxyFactory
 					throw new InvalidProxyException(clazz.getName() + "." + method.getName()
 						+ " is missing annotation " + RestMethod.class.getName());
 				}
+				
+				// validate that the method declares the webservice exception
+				validateThrowsExeception(method);
 			}
 		}
 		
@@ -118,6 +122,34 @@ public class RestProxyFactory
 		{
 			clazz
 		}, restInvocationHandler);
+	}
+	
+	/**
+	 * Validates that the method provided throws the {@link WebServiceException}
+	 * 
+	 * @param method
+	 */
+	private void validateThrowsExeception(final Method method)
+	{
+		// retrieve the array of declared exception types
+		Class<?>[] exceptionTypes = method.getExceptionTypes();
+		
+		// make sure that the exception types array is not null
+		if (null != exceptionTypes)
+		{
+			// for each of the exception types
+			for (Class<?> type : exceptionTypes)
+			{
+				// check to see if this type is assignable from the webservice exception
+				if (WebServiceException.class.isAssignableFrom(type))
+				{
+					return;
+				}
+			}
+		}
+		
+		throw new InvalidProxyException(method.getDeclaringClass().getName() + "." + method.getName()
+			+ " is missing throws " + WebServiceException.class.getName());
 	}
 	
 	public HttpClientFactory getHttpClientFactory()
