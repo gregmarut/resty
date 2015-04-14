@@ -9,10 +9,10 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.gregmarut</groupId>
 	<artifactId>resty</artifactId>
-	<version>1.1.1</version>
+	<version>1.1-SNAPSHOT</version>
 	<name>Resty</name>
-	<description>Proxy based rest client</description>
-	<url>https://code.google.com/p/resty/</url>
+	<description>Proxy based REST client</description>
+	<url>https://github.com/gregmarut/resty/</url>
 
 	<licenses>
 		<license>
@@ -23,9 +23,9 @@
 	</licenses>
 
 	<scm>
-		<url>https://code.google.com/p/resty/</url>
-		<connection>scm:svn:https://resty.googlecode.com/svn/trunk/test-beangen/</connection>
-		<developerConnection>scm:svn:https://resty.googlecode.com/svn/trunk/test-beangen/</developerConnection>
+		<url>https://github.com/gregmarut/resty.git</url>
+		<connection>scm:git:https://github.com/gregmarut/resty.git</connection>
+		<developerConnection>scm:git:https://github.com/gregmarut/resty.git</developerConnection>
 	</scm>
 
 	<dependencies>
@@ -152,4 +152,15 @@
 			</build>
 		</profile>
 	</profiles>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
 </project>
