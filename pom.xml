@@ -7,12 +7,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.gregmarut</groupId>
+	<groupId>com.gregmarut.resty</groupId>
 	<artifactId>resty</artifactId>
-	<version>1.1.1</version>
+	<version>1.1-RELEASE</version>
 	<name>Resty</name>
-	<description>Proxy based rest client</description>
-	<url>https://code.google.com/p/resty/</url>
+	<description>Proxy based REST client</description>
+	<url>https://github.com/gregmarut/resty/</url>
 
 	<licenses>
 		<license>
@@ -23,10 +23,17 @@
 	</licenses>
 
 	<scm>
-		<url>https://code.google.com/p/resty/</url>
-		<connection>scm:svn:https://resty.googlecode.com/svn/trunk/test-beangen/</connection>
-		<developerConnection>scm:svn:https://resty.googlecode.com/svn/trunk/test-beangen/</developerConnection>
+		<url>https://github.com/gregmarut/resty.git</url>
+		<connection>scm:git:https://github.com/gregmarut/resty.git</connection>
+		<developerConnection>scm:git:https://github.com/gregmarut/resty.git</developerConnection>
 	</scm>
+
+	<developers>
+		<developer>
+			<name>Greg Marut</name>
+			<email>greg.marut@gmail.com</email>
+		</developer>
+	</developers>
 
 	<dependencies>
 		<!-- Compile -->
@@ -93,6 +100,32 @@
 					<target>1.6</target>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>2.2.1</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.9.1</version>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
@@ -151,5 +184,41 @@
 				</plugins>
 			</build>
 		</profile>
+		<profile>
+			<id>sign</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-repository-plugin</artifactId>
+						<version>2.3.1</version>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 	</profiles>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
 </project>
