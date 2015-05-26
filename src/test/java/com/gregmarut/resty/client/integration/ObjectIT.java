@@ -43,6 +43,13 @@ public class ObjectIT
 		objectProxy.putUser(userBean);
 	}
 	
+	public void getBytesTest() throws WebServiceException
+	{
+		byte[] bytes = objectProxy.getBytes();
+		
+		Assert.assertEquals(new String(bytes), "Hello");
+	}
+	
 	@Test
 	public void putWrongUserTest()
 	{

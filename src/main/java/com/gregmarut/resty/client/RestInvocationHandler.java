@@ -1,11 +1,7 @@
 /*******************************************************************************
- * Copyright (c) 2014 Greg Marut.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Public License v3.0
- * which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/gpl.html
- * Contributors:
- * Greg Marut - initial API and implementation
+ * Copyright (c) 2014 Greg Marut. All rights reserved. This program and the accompanying materials are made available
+ * under the terms of the GNU Public License v3.0 which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html Contributors: Greg Marut - initial API and implementation
  ******************************************************************************/
 package com.gregmarut.resty.client;
 
@@ -76,7 +72,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	}
 	
 	public RestInvocationHandler(final HttpClientFactory httpClientFactory, final String rootURL,
-		final StatusCodeHandler statusCodeHandler)
+			final StatusCodeHandler statusCodeHandler)
 	{
 		this.httpClientFactory = httpClientFactory;
 		this.rootURL = rootURL;
@@ -99,7 +95,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 		if (null == restMethod)
 		{
 			throw new MissingAnnotationException(method.getName() + " must be annotated with "
-				+ RestMethod.class.getName());
+					+ RestMethod.class.getName());
 		}
 		
 		// create a new parameter mapper
@@ -151,7 +147,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	 * @throws WebServiceException
 	 */
 	protected HttpUriRequest createRequest(final String url, final Object entity, final MethodType methodType)
-		throws WebServiceException
+			throws WebServiceException
 	{
 		// holds the http request
 		HttpUriRequest request;
@@ -184,32 +180,32 @@ public abstract class RestInvocationHandler implements InvocationHandler
 				if (null != entity)
 				{
 					throw new UnexpectedEntityException(
-						"Entities are not allowed in GET requests. Mark any arguments with the "
-							+ Parameter.class.getName() + " annotation.");
+							"Entities are not allowed in GET requests. Mark any arguments with the "
+									+ Parameter.class.getName() + " annotation.");
 				}
 				
 				request = getRestRequestFactory().createGetRequest(url);
-				break;
+			break;
 			
 			case POST:
 				request = getRestRequestFactory().createPostRequest(url, data);
-				break;
+			break;
 			
 			case PUT:
 				request = getRestRequestFactory().createPutRequest(url, data);
-				break;
+			break;
 			
 			case DELETE:
 				// make sure there is no entity
 				if (null != entity)
 				{
 					throw new UnexpectedEntityException(
-						"Entities are not allowed in DELETE requests. Mark any arguments with the "
-							+ Parameter.class.getName() + " annotation.");
+							"Entities are not allowed in DELETE requests. Mark any arguments with the "
+									+ Parameter.class.getName() + " annotation.");
 				}
 				
 				request = getRestRequestFactory().createDeleteRequest(url);
-				break;
+			break;
 			
 			default:
 				throw new InvalidMethodTypeException();
@@ -225,7 +221,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	 * @param request
 	 */
 	protected void setHeadersAndParameters(final Method method, final HttpUriRequest request,
-		final ParameterMapper parameterMapper)
+			final ParameterMapper parameterMapper)
 	{
 		// retrieve the list of http headers from the factory
 		Set<Entry<String, String>> httpHeaderEntries = httpClientFactory.getHttpHeaders().entrySet();
@@ -310,7 +306,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	 * @throws WebServiceException
 	 */
 	protected HttpResponse executeRequest(final HttpClient httpClient, final HttpUriRequest request)
-		throws WebServiceException
+			throws WebServiceException
 	{
 		try
 		{
@@ -333,8 +329,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	 * @throws UnexpectedResponseEntityException
 	 */
 	protected Object handleResponse(final HttpResponse httpResponse, final Class<?> expectedReturnType,
-		final Expected expected)
-		throws WebServiceException, UnexpectedResponseEntityException
+			final Expected expected) throws WebServiceException, UnexpectedResponseEntityException
 	{
 		Object result;
 		Object errorResult = null;
@@ -375,14 +370,22 @@ public abstract class RestInvocationHandler implements InvocationHandler
 				// check to see if there is a return type
 				if (null != expectedReturnType && !expectedReturnType.equals(void.class))
 				{
-					try
+					// check to see if the return type is a byte array
+					if (byte[].class.equals(expectedReturnType))
 					{
-						// deserialize the result
-						result = getSerializer().unmarshall(response, expectedReturnType);
+						result = response;
 					}
-					catch (SerializationException e)
+					else
 					{
-						result = null;
+						try
+						{
+							// deserialize the result
+							result = getSerializer().unmarshall(response, expectedReturnType);
+						}
+						catch (SerializationException e)
+						{
+							result = null;
+						}
 					}
 				}
 				else

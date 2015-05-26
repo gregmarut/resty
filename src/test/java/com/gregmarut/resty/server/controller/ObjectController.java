@@ -16,8 +16,7 @@ import com.gregmarut.resty.server.exception.UserException;
 public class ObjectController
 {
 	@RequestMapping(value = "/user", method = RequestMethod.GET)
-	public @ResponseBody
-	UserBean getUser()
+	public @ResponseBody UserBean getUser()
 	{
 		UserBean userBean = new UserBean();
 		userBean.setFirstName("Greg");
@@ -34,5 +33,11 @@ public class ObjectController
 		{
 			throw new UserException("Wrong User");
 		}
+	}
+	
+	@RequestMapping(value = "/bytes", method = RequestMethod.GET)
+	public @ResponseBody byte[] getBytes()
+	{
+		return "Hello".getBytes();
 	}
 }

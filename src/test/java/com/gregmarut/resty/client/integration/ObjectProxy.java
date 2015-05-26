@@ -18,4 +18,7 @@ public interface ObjectProxy
 	@RestMethod(uri = "/object/user", method = MethodType.PUT)
 	@Expected(statusCode = HttpStatus.SC_CREATED)
 	void putUser(UserBean userBean) throws WebServiceException;
+	
+	@RestMethod(uri = "/object/bytes", method = MethodType.GET)
+	byte[] getBytes() throws WebServiceException;
 }
