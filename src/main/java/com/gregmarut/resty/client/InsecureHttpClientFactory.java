@@ -16,7 +16,6 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
@@ -32,13 +31,14 @@ import org.apache.http.impl.client.DefaultHttpClient;
 public class InsecureHttpClientFactory extends HttpClientFactory
 {
 	@Override
-	public HttpClient createHttpClient()
+	protected DefaultHttpClient instantiateHttpClient()
 	{
-		HttpClient client = super.createHttpClient();
-		return wrapClient(client);
+		DefaultHttpClient httpClient = super.instantiateHttpClient();
+		disableSSLVerification(httpClient);
+		return httpClient;
 	}
 	
-	private HttpClient wrapClient(HttpClient base)
+	private void disableSSLVerification(final DefaultHttpClient httpClient)
 	{
 		try
 		{
@@ -88,15 +88,14 @@ public class InsecureHttpClientFactory extends HttpClientFactory
 			ctx.init(null, new TrustManager[] { tm }, null);
 			SSLSocketFactory ssf = new SSLSocketFactory(ctx);
 			ssf.setHostnameVerifier(verifier);
-			ClientConnectionManager ccm = base.getConnectionManager();
+			
+			ClientConnectionManager ccm = httpClient.getConnectionManager();
 			SchemeRegistry sr = ccm.getSchemeRegistry();
 			sr.register(new Scheme("https", ssf, 443));
-			return new DefaultHttpClient(ccm, base.getParams());
 		}
 		catch (Exception ex)
 		{
 			ex.printStackTrace();
-			return null;
 		}
 	}
 }
