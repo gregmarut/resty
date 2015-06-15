@@ -1,11 +1,7 @@
 /*******************************************************************************
- * Copyright (c) 2014 Greg Marut.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Public License v3.0
- * which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/gpl.html
- * Contributors:
- * Greg Marut - initial API and implementation
+ * Copyright (c) 2014 Greg Marut. All rights reserved. This program and the accompanying materials are made available
+ * under the terms of the GNU Public License v3.0 which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html Contributors: Greg Marut - initial API and implementation
  ******************************************************************************/
 package com.gregmarut.resty.client;
 
@@ -31,13 +27,23 @@ public class RestProxyFactory
 	
 	public RestProxyFactory(final String hostUrl)
 	{
-		httpClientFactory = new HttpClientFactory();
+		this(hostUrl, new HttpClientFactory());
+	}
+	
+	public RestProxyFactory(final String hostUrl, final HttpClientFactory httpClientFactory)
+	{
+		this.httpClientFactory = httpClientFactory;
 		this.restInvocationHandler = new JSONInvocationHandler(httpClientFactory, hostUrl);
 	}
 	
 	public RestProxyFactory(final HostDetails hostDetails)
 	{
-		httpClientFactory = new HttpClientFactory();
+		this(hostDetails, new HttpClientFactory());
+	}
+	
+	public RestProxyFactory(final HostDetails hostDetails, final HttpClientFactory httpClientFactory)
+	{
+		this.httpClientFactory = httpClientFactory;
 		this.restInvocationHandler = new JSONInvocationHandler(httpClientFactory, hostDetails.getUrl());
 	}
 	
@@ -69,8 +75,7 @@ public class RestProxyFactory
 	}
 	
 	/**
-	 * Creates a proxy of the specified interface. Interface must be properly annotated with
-	 * {@link RestProxy}.
+	 * Creates a proxy of the specified interface. Interface must be properly annotated with {@link RestProxy}.
 	 * 
 	 * @param clazz
 	 * @return
@@ -109,7 +114,7 @@ public class RestProxyFactory
 				if (null == restMethod)
 				{
 					throw new InvalidProxyException(clazz.getName() + "." + method.getName()
-						+ " is missing annotation " + RestMethod.class.getName());
+							+ " is missing annotation " + RestMethod.class.getName());
 				}
 				
 				// validate that the method declares the webservice exception
@@ -118,10 +123,7 @@ public class RestProxyFactory
 		}
 		
 		// create and return a new instance of the proxy
-		return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[]
-		{
-			clazz
-		}, restInvocationHandler);
+		return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, restInvocationHandler);
 	}
 	
 	/**
@@ -149,7 +151,7 @@ public class RestProxyFactory
 		}
 		
 		throw new InvalidProxyException(method.getDeclaringClass().getName() + "." + method.getName()
-			+ " is missing throws " + WebServiceException.class.getName());
+				+ " is missing throws " + WebServiceException.class.getName());
 	}
 	
 	public HttpClientFactory getHttpClientFactory()
