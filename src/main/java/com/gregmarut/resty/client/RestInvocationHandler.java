@@ -384,26 +384,44 @@ public abstract class RestInvocationHandler implements InvocationHandler
 						}
 						catch (SerializationException e)
 						{
-							result = null;
+							// make sure the error class is not null
+							if (null != errorClass)
+							{
+								result = null;
+								
+								try
+								{
+									// attempt to deserialze the error message
+									errorResult = getSerializer().unmarshall(response, errorClass);
+								}
+								catch (SerializationException e1)
+								{
+									throw new UnexpectedResponseEntityException(e);
+								}
+							}
+							else
+							{
+								throw new UnexpectedResponseEntityException(e);
+							}
 						}
 					}
 				}
 				else
 				{
 					result = null;
-				}
-				
-				// make sure the error class is not null
-				if (null != errorClass)
-				{
-					try
+					
+					// make sure the error class is not null
+					if (null != errorClass)
 					{
-						// attempt to deserialze the error message
-						errorResult = getSerializer().unmarshall(response, errorClass);
-					}
-					catch (SerializationException e)
-					{
-						// ignore this error
+						try
+						{
+							// attempt to deserialze the error message
+							errorResult = getSerializer().unmarshall(response, errorClass);
+						}
+						catch (SerializationException e)
+						{
+							// ignore this error
+						}
 					}
 				}
 			}
