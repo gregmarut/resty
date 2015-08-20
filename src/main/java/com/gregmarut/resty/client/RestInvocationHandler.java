@@ -47,8 +47,8 @@ import com.gregmarut.resty.serialization.Serializer;
  */
 public abstract class RestInvocationHandler implements InvocationHandler
 {
-	private static final String REGEX_VAR = "\\{([a-zA-Z0-9\\.]+?)\\}";
-	private static final String REGEX_DOMAIN_URL = "^[a-zA-Z]+://([a-zA-Z0-9\\.\\-]+)";
+	public static final String REGEX_VAR = "\\{([a-zA-Z0-9\\.]+?)\\}";
+	public static final String REGEX_DOMAIN_URL = "^[a-zA-Z]+://([a-zA-Z0-9\\.\\-]+)";
 	
 	// holds the pattern object for capturing uri variables
 	private final Pattern varPattern;
@@ -375,6 +375,10 @@ public abstract class RestInvocationHandler implements InvocationHandler
 					{
 						result = response;
 					}
+					else if (String.class.equals(expectedReturnType))
+					{
+						result = new String(response);
+					}
 					else
 					{
 						try
@@ -502,7 +506,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 		String uri = replaceVariables(restMethod.uri(), parameterMapper);
 		
 		// check to see if the domain is already there
-		if (null != rootURL && !domainPattern.matcher(uri).matches())
+		if (null != rootURL && !domainPattern.matcher(uri).find())
 		{
 			// build the url
 			StringBuilder url = new StringBuilder();
