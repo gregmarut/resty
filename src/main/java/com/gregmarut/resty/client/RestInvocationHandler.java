@@ -8,9 +8,11 @@ package com.gregmarut.resty.client;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.net.URLEncoder;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -574,7 +576,14 @@ public abstract class RestInvocationHandler implements InvocationHandler
 			}
 		}
 		
-		return next.toString();
+		try
+		{
+			return URLEncoder.encode(next.toString(), "UTF-8");
+		}
+		catch (UnsupportedEncodingException e)
+		{
+			return next.toString();
+		}
 	}
 	
 	public Class<?> getErrorClass()
