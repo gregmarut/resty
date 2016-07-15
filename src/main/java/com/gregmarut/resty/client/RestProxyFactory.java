@@ -1,6 +1,8 @@
 /*******************************************************************************
- * Copyright (c) 2014 Greg Marut. All rights reserved. This program and the accompanying materials are made available
- * under the terms of the GNU Public License v3.0 which accompanies this distribution, and is available at
+ * Copyright (c) 2014 Greg Marut. All rights reserved. This program and the accompanying materials
+ * are made available
+ * under the terms of the GNU Public License v3.0 which accompanies this distribution, and is
+ * available at
  * http://www.gnu.org/licenses/gpl.html Contributors: Greg Marut - initial API and implementation
  ******************************************************************************/
 package com.gregmarut.resty.client;
@@ -8,11 +10,9 @@ package com.gregmarut.resty.client;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-
 import com.gregmarut.resty.client.annotation.RestMethod;
 import com.gregmarut.resty.client.annotation.RestProxy;
+import com.gregmarut.resty.client.authentication.AuthenticationProvider;
 import com.gregmarut.resty.client.exception.InvalidProxyException;
 import com.gregmarut.resty.client.exception.WebServiceException;
 import com.gregmarut.resty.client.http.HostDetails;
@@ -54,19 +54,18 @@ public class RestProxyFactory
 	}
 	
 	/**
-	 * Sets the HTTP authentication credentials
+	 * Sets an authentication provider for the api requests
 	 * 
-	 * @param username
-	 * @param password
+	 * @param authenticationProvider
 	 */
-	public void setHttpAuthenticationCredentials(final String username, final String password)
+	public void setAuthenticationProvider(final AuthenticationProvider authenticationProvider)
 	{
-		httpClientFactory.setBasicCredentials(new UsernamePasswordCredentials(username, password), AuthScope.ANY);
+		restInvocationHandler.setAuthenticationProvider(authenticationProvider);
 	}
 	
-	public void eraseHttpAuthenticationCredentials()
+	public void clearAuthenticationProvider()
 	{
-		httpClientFactory.setBasicCredentials(null, null);
+		restInvocationHandler.setAuthenticationProvider(null);
 	}
 	
 	public void eraseCookies()
@@ -75,7 +74,8 @@ public class RestProxyFactory
 	}
 	
 	/**
-	 * Creates a proxy of the specified interface. Interface must be properly annotated with {@link RestProxy}.
+	 * Creates a proxy of the specified interface. Interface must be properly annotated with
+	 * {@link RestProxy}.
 	 * 
 	 * @param clazz
 	 * @return
@@ -114,7 +114,7 @@ public class RestProxyFactory
 				if (null == restMethod)
 				{
 					throw new InvalidProxyException(clazz.getName() + "." + method.getName()
-							+ " is missing annotation " + RestMethod.class.getName());
+						+ " is missing annotation " + RestMethod.class.getName());
 				}
 				
 				// validate that the method declares the webservice exception
@@ -123,7 +123,10 @@ public class RestProxyFactory
 		}
 		
 		// create and return a new instance of the proxy
-		return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, restInvocationHandler);
+		return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[]
+		{
+			clazz
+		}, restInvocationHandler);
 	}
 	
 	/**
@@ -151,7 +154,7 @@ public class RestProxyFactory
 		}
 		
 		throw new InvalidProxyException(method.getDeclaringClass().getName() + "." + method.getName()
-				+ " is missing throws " + WebServiceException.class.getName());
+			+ " is missing throws " + WebServiceException.class.getName());
 	}
 	
 	public HttpClientFactory getHttpClientFactory()

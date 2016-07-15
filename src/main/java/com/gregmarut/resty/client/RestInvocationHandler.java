@@ -1,6 +1,8 @@
 /*******************************************************************************
- * Copyright (c) 2014 Greg Marut. All rights reserved. This program and the accompanying materials are made available
- * under the terms of the GNU Public License v3.0 which accompanies this distribution, and is available at
+ * Copyright (c) 2014 Greg Marut. All rights reserved. This program and the accompanying materials
+ * are made available
+ * under the terms of the GNU Public License v3.0 which accompanies this distribution, and is
+ * available at
  * http://www.gnu.org/licenses/gpl.html Contributors: Greg Marut - initial API and implementation
  ******************************************************************************/
 package com.gregmarut.resty.client;
@@ -19,8 +21,10 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.params.BasicHttpParams;
@@ -32,6 +36,7 @@ import com.gregmarut.resty.client.annotation.HttpParameters;
 import com.gregmarut.resty.client.annotation.NameValue;
 import com.gregmarut.resty.client.annotation.Parameter;
 import com.gregmarut.resty.client.annotation.RestMethod;
+import com.gregmarut.resty.client.authentication.AuthenticationProvider;
 import com.gregmarut.resty.client.exception.InvalidMethodTypeException;
 import com.gregmarut.resty.client.exception.InvalidVariablePathException;
 import com.gregmarut.resty.client.exception.MissingAnnotationException;
@@ -68,13 +73,16 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	// determines which class to use to hold the error entities
 	private Class<?> errorClass;
 	
+	// holds the authentication provider
+	private AuthenticationProvider authenticationProvider;
+	
 	public RestInvocationHandler(final HttpClientFactory httpClientFactory, final String rootURL)
 	{
 		this(httpClientFactory, rootURL, new DefaultStatusCodeHandler());
 	}
 	
 	public RestInvocationHandler(final HttpClientFactory httpClientFactory, final String rootURL,
-			final StatusCodeHandler statusCodeHandler)
+		final StatusCodeHandler statusCodeHandler)
 	{
 		this.httpClientFactory = httpClientFactory;
 		this.rootURL = rootURL;
@@ -97,7 +105,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 		if (null == restMethod)
 		{
 			throw new MissingAnnotationException(method.getName() + " must be annotated with "
-					+ RestMethod.class.getName());
+				+ RestMethod.class.getName());
 		}
 		
 		// create a new parameter mapper
@@ -149,7 +157,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	 * @throws WebServiceException
 	 */
 	protected HttpUriRequest createRequest(final String url, final Object entity, final MethodType methodType)
-			throws WebServiceException
+		throws WebServiceException
 	{
 		// holds the http request
 		HttpUriRequest request;
@@ -182,32 +190,32 @@ public abstract class RestInvocationHandler implements InvocationHandler
 				if (null != entity)
 				{
 					throw new UnexpectedEntityException(
-							"Entities are not allowed in GET requests. Mark any arguments with the "
-									+ Parameter.class.getName() + " annotation.");
+						"Entities are not allowed in GET requests. Mark any arguments with the "
+							+ Parameter.class.getName() + " annotation.");
 				}
 				
 				request = getRestRequestFactory().createGetRequest(url);
-			break;
+				break;
 			
 			case POST:
 				request = getRestRequestFactory().createPostRequest(url, data);
-			break;
+				break;
 			
 			case PUT:
 				request = getRestRequestFactory().createPutRequest(url, data);
-			break;
+				break;
 			
 			case DELETE:
 				// make sure there is no entity
 				if (null != entity)
 				{
 					throw new UnexpectedEntityException(
-							"Entities are not allowed in DELETE requests. Mark any arguments with the "
-									+ Parameter.class.getName() + " annotation.");
+						"Entities are not allowed in DELETE requests. Mark any arguments with the "
+							+ Parameter.class.getName() + " annotation.");
 				}
 				
 				request = getRestRequestFactory().createDeleteRequest(url);
-			break;
+				break;
 			
 			default:
 				throw new InvalidMethodTypeException();
@@ -223,7 +231,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	 * @param request
 	 */
 	protected void setHeadersAndParameters(final Method method, final HttpUriRequest request,
-			final ParameterMapper parameterMapper)
+		final ParameterMapper parameterMapper)
 	{
 		// retrieve the list of http headers from the factory
 		Set<Entry<String, String>> httpHeaderEntries = httpClientFactory.getHttpHeaders().entrySet();
@@ -308,12 +316,61 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	 * @throws WebServiceException
 	 */
 	protected HttpResponse executeRequest(final HttpClient httpClient, final HttpUriRequest request)
-			throws WebServiceException
+		throws WebServiceException
+	{
+		return executeRequest(httpClient, request, true);
+	}
+	
+	/**
+	 * Executes the request on the http client
+	 * 
+	 * @param httpClient
+	 * @param request
+	 * @param allowAuthenticationAttempt
+	 *        if the request fails due to a 401 status code, this determines whether or not the
+	 *        authentication provider is allowed to attempt authentication and retry the request
+	 * @return
+	 * @throws WebServiceException
+	 */
+	protected HttpResponse executeRequest(final HttpClient httpClient, final HttpUriRequest request,
+		final boolean allowAuthenticationAttempt) throws WebServiceException
 	{
 		try
 		{
+			// check to see if there is an authentication provider
+			if (null != authenticationProvider)
+			{
+				// notify the authentication provider of the request before it is executed
+				authenticationProvider.preRequest(request);
+			}
+			
 			// execute the call
-			return httpClient.execute(request);
+			HttpResponse response = httpClient.execute(request);
+			
+			// check to see if there is an authentication provider and if response is an
+			// unauthorized
+			if (null != authenticationProvider
+				&& response.getStatusLine().getStatusCode() == HttpStatus.SC_UNAUTHORIZED)
+			{
+				// check to see if authentication is allowed
+				if (allowAuthenticationAttempt)
+				{
+					// check to see if there is a www-authenticate header
+					Header wwwAuthHeader = response.getFirstHeader(org.apache.http.HttpHeaders.WWW_AUTHENTICATE);
+					if (null != wwwAuthHeader)
+					{
+						// let the authentication provider execute any authentication steps needed
+						if (authenticationProvider.doAuthentication(httpClient))
+						{
+							// retry the request but do not allow authentication again if it fails a
+							// second time
+							response = executeRequest(httpClient, request, false);
+						}
+					}
+				}
+			}
+			
+			return response;
 		}
 		catch (IOException e)
 		{
@@ -331,7 +388,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	 * @throws UnexpectedResponseEntityException
 	 */
 	protected Object handleResponse(final HttpResponse httpResponse, final Class<?> expectedReturnType,
-			final Expected expected) throws WebServiceException, UnexpectedResponseEntityException
+		final Expected expected) throws WebServiceException, UnexpectedResponseEntityException
 	{
 		Object result;
 		Object errorResult = null;
@@ -599,5 +656,15 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	public HttpClientFactory getHttpClientFactory()
 	{
 		return httpClientFactory;
+	}
+	
+	public AuthenticationProvider getAuthenticationProvider()
+	{
+		return authenticationProvider;
+	}
+	
+	public void setAuthenticationProvider(AuthenticationProvider authenticationProvider)
+	{
+		this.authenticationProvider = authenticationProvider;
 	}
 }

@@ -6,6 +6,8 @@ import org.junit.Test;
 import com.gregmarut.resty.bean.ErrorBean;
 import com.gregmarut.resty.bean.UserBean;
 import com.gregmarut.resty.client.RestProxyFactory;
+import com.gregmarut.resty.client.authentication.AuthenticationProvider;
+import com.gregmarut.resty.client.authentication.basic.BasicAuthenticationProvider;
 import com.gregmarut.resty.client.exception.WebServiceException;
 import com.gregmarut.resty.client.http.HostDetails;
 import com.gregmarut.resty.client.http.Scheme;
@@ -27,8 +29,9 @@ public class AuthBasicIT
 		
 		// set the basic auth credentials
 		restProxyFactory.setErrorClass(ErrorEntity.class);
-		restProxyFactory.setHttpAuthenticationCredentials(TestUserDetailsService.TEST_USERNAME,
-			TestUserDetailsService.TEST_PASSWORD);
+		AuthenticationProvider authenticationProvider =
+			new BasicAuthenticationProvider(TestUserDetailsService.TEST_USERNAME, TestUserDetailsService.TEST_PASSWORD);
+		restProxyFactory.setAuthenticationProvider(authenticationProvider);
 	}
 	
 	@Test
