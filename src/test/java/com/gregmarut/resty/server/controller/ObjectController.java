@@ -1,22 +1,21 @@
 package com.gregmarut.resty.server.controller;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.gregmarut.resty.bean.UserBean;
 import com.gregmarut.resty.server.exception.UserException;
 
-@Controller
+@RestController
 @RequestMapping("/object")
 public class ObjectController
 {
 	@RequestMapping(value = "/user", method = RequestMethod.GET)
-	public @ResponseBody UserBean getUser()
+	public UserBean getUser()
 	{
 		UserBean userBean = new UserBean();
 		userBean.setFirstName("Greg");
@@ -36,7 +35,7 @@ public class ObjectController
 	}
 	
 	@RequestMapping(value = "/bytes", method = RequestMethod.GET)
-	public @ResponseBody byte[] getBytes()
+	public byte[] getBytes()
 	{
 		return "Hello".getBytes();
 	}

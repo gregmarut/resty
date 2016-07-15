@@ -35,6 +35,16 @@
 		</developer>
 	</developers>
 
+	<properties>
+
+		<!-- Test Dependency Versions -->
+		<version.spring.security>4.0.2.RELEASE</version.spring.security>
+		<version.cglib>3.1</version.cglib>
+		<version.servlet-api>3.1.0</version.servlet-api>
+		<version.spring>4.2.0.RELEASE</version.spring>
+		<version.jackson>1.9.13</version.jackson>
+	</properties>
+
 	<dependencies>
 		<!-- Compile -->
 		<dependency>
@@ -68,13 +78,37 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-webmvc</artifactId>
-			<version>3.2.6.RELEASE</version>
+			<version>${version.spring}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-web</artifactId>
+			<version>${version.spring.security}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-config</artifactId>
+			<version>${version.spring.security}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.jackson</groupId>
 			<artifactId>jackson-mapper-asl</artifactId>
-			<version>1.9.13</version>
+			<version>${version.jackson}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>cglib</groupId>
+			<artifactId>cglib-nodep</artifactId>
+			<version>${version.cglib}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
+			<version>${version.servlet-api}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -141,7 +175,6 @@
 						<artifactId>jetty-maven-plugin</artifactId>
 						<version>9.3.0.M1</version>
 						<configuration>
-							<webAppSourceDirectory>${project.basedir}/src/test/webapp</webAppSourceDirectory>
 							<scanIntervalSeconds>0</scanIntervalSeconds>
 							<stopPort>8005</stopPort>
 							<stopKey>STOP</stopKey>
