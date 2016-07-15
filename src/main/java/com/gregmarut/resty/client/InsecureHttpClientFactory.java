@@ -1,6 +1,8 @@
 /*******************************************************************************
- * Copyright (c) 2014 Greg Marut. All rights reserved. This program and the accompanying materials are made available
- * under the terms of the GNU Public License v3.0 which accompanies this distribution, and is available at
+ * Copyright (c) 2014 Greg Marut. All rights reserved. This program and the accompanying materials
+ * are made available
+ * under the terms of the GNU Public License v3.0 which accompanies this distribution, and is
+ * available at
  * http://www.gnu.org/licenses/gpl.html Contributors: Greg Marut - initial API and implementation
  ******************************************************************************/
 package com.gregmarut.resty.client;
@@ -22,6 +24,7 @@ import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 /**
  * Disables the SSL verification for clients
@@ -31,11 +34,11 @@ import org.apache.http.impl.client.DefaultHttpClient;
 public class InsecureHttpClientFactory extends HttpClientFactory
 {
 	@Override
-	protected DefaultHttpClient instantiateHttpClient()
+	protected void addDefaultHttpParams(HttpClientBuilder clientBuilder)
 	{
-		DefaultHttpClient httpClient = super.instantiateHttpClient();
-		disableSSLVerification(httpClient);
-		return httpClient;
+		super.addDefaultHttpParams(clientBuilder);
+		
+		// :FIXME:
 	}
 	
 	private void disableSSLVerification(final DefaultHttpClient httpClient)
@@ -85,7 +88,10 @@ public class InsecureHttpClientFactory extends HttpClientFactory
 				}
 			};
 			
-			ctx.init(null, new TrustManager[] { tm }, null);
+			ctx.init(null, new TrustManager[]
+			{
+				tm
+			}, null);
 			SSLSocketFactory ssf = new SSLSocketFactory(ctx);
 			ssf.setHostnameVerifier(verifier);
 			

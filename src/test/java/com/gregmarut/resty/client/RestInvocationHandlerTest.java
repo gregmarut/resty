@@ -14,7 +14,9 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,9 +33,9 @@ public class RestInvocationHandlerTest
 	private TestInterfaceProxy proxy;
 	
 	//mocked objects
-	private HttpClient mockHttpClient;
+	private CloseableHttpClient mockHttpClient;
 	private HttpClientFactory mockHttpClientFactory;
-	private HttpResponse mockHttpResponse;
+	private CloseableHttpResponse mockHttpResponse;
 	private HttpEntity mockEntity;
 	private StatusLine mockStatusLine;
 	
@@ -41,8 +43,8 @@ public class RestInvocationHandlerTest
 	public void init() throws Exception
 	{
 		mockHttpClientFactory = Mockito.mock(HttpClientFactory.class);
-		mockHttpClient = Mockito.mock(HttpClient.class);
-		mockHttpResponse = Mockito.mock(HttpResponse.class);
+		mockHttpClient = Mockito.mock(CloseableHttpClient.class);
+		mockHttpResponse = Mockito.mock(CloseableHttpResponse.class);
 		mockEntity = Mockito.mock(HttpEntity.class);
 		mockStatusLine = Mockito.mock(StatusLine.class);
 		

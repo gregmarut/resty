@@ -16,15 +16,12 @@ import java.util.Set;
 
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.Credentials;
 import org.apache.http.client.CookieStore;
-import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 /**
  * Provides a factory for creating HttpClients
@@ -46,10 +43,6 @@ public class HttpClientFactory
 	protected final Set<HttpRequestInterceptor> httpRequestInterceptors;
 	protected final Set<HttpResponseInterceptor> httpResponseInterceptors;
 	
-	// holds the credentials to use for the client (if any)
-	private AuthScope authScope;
-	private Credentials credentials;
-	
 	public HttpClientFactory()
 	{
 		// create a new cookie store
@@ -68,46 +61,32 @@ public class HttpClientFactory
 	 * 
 	 * @return
 	 */
-	public HttpClient createHttpClient()
+	public CloseableHttpClient createHttpClient()
 	{
 		// create a new default client
-		DefaultHttpClient client = instantiateHttpClient();
+		HttpClientBuilder clientBuilder = HttpClientBuilder.create();
+		
+		PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+		clientBuilder.setConnectionManager(connectionManager);
 		
 		// assign the same cookie store
-		client.setCookieStore(cookieStore);
-		
-		// make sure the credentials and authscope are not null
-		if (null != credentials && null != authScope)
-		{
-			// set the credentials for this client
-			client.getCredentialsProvider().setCredentials(authScope, credentials);
-		}
+		clientBuilder.setDefaultCookieStore(cookieStore);
 		
 		// for each of the request interceptors
 		for (HttpRequestInterceptor interceptor : httpRequestInterceptors)
 		{
 			// add the interceptor to the client
-			client.addRequestInterceptor(interceptor);
+			clientBuilder.addInterceptorLast(interceptor);
 		}
 		
 		// for each of the response interceptors
 		for (HttpResponseInterceptor interceptor : httpResponseInterceptors)
 		{
 			// add the interceptor to the client
-			client.addResponseInterceptor(interceptor);
+			clientBuilder.addInterceptorLast(interceptor);
 		}
 		
-		return client;
-	}
-	
-	/**
-	 * Instantiates a new instance of an http client
-	 * 
-	 * @return
-	 */
-	protected DefaultHttpClient instantiateHttpClient()
-	{
-		return new DefaultHttpClient(createDefaultHttpParams());
+		return clientBuilder.build();
 	}
 	
 	/**
@@ -115,29 +94,19 @@ public class HttpClientFactory
 	 * 
 	 * @return
 	 */
-	protected HttpParams createDefaultHttpParams()
+	protected void addDefaultHttpParams(HttpClientBuilder clientBuilder)
 	{
-		HttpParams httpParameters = new BasicHttpParams();
-		
-		// Set the timeout in milliseconds until a connection is established.
-		// The default value is zero, that means the timeout is not used.
-		HttpConnectionParams.setConnectionTimeout(httpParameters, DEFAULT_TIMEOUT);
+		RequestConfig.Builder config = RequestConfig.custom();
 		
 		// Set the default socket timeout (SO_TIMEOUT)
 		// in milliseconds which is the timeout for waiting for data.
-		HttpConnectionParams.setSoTimeout(httpParameters, DEFAULT_SO_TIMEOUT);
+		config.setSocketTimeout(DEFAULT_SO_TIMEOUT);
 		
-		return httpParameters;
-	}
-	
-	/**
-	 * @param credentials
-	 * the credentials to set
-	 */
-	public void setBasicCredentials(final Credentials credentials, final AuthScope authScope)
-	{
-		this.credentials = credentials;
-		this.authScope = authScope;
+		// Set the timeout in milliseconds until a connection is established.
+		// The default value is zero, that means the timeout is not used.
+		config.setConnectTimeout(DEFAULT_TIMEOUT);
+		
+		clientBuilder.setDefaultRequestConfig(config.build());
 	}
 	
 	public void addHttpRequestInterceptor(final HttpRequestInterceptor interceptor)
