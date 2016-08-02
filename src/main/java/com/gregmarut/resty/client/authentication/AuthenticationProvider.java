@@ -1,7 +1,7 @@
 package com.gregmarut.resty.client.authentication;
 
-import org.apache.http.HttpRequest;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpUriRequest;
 
 public interface AuthenticationProvider
 {
@@ -11,7 +11,7 @@ public interface AuthenticationProvider
 	 * @param request
 	 *        the request object
 	 */
-	void preRequest(HttpRequest request);
+	void preRequest(HttpUriRequest request);
 	
 	/**
 	 * Allows the authentication provider to complete any necessary authentication steps and returns

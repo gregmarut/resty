@@ -8,13 +8,13 @@ import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpHeaders;
-import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +55,7 @@ public class OAuthPasswordAuthenticationProvider implements AuthenticationProvid
 	}
 	
 	@Override
-	public void preRequest(HttpRequest request)
+	public void preRequest(final HttpUriRequest request)
 	{
 		// make sure the token is not null
 		if (null != token)

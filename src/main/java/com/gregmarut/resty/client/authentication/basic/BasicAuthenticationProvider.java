@@ -2,8 +2,8 @@ package com.gregmarut.resty.client.authentication.basic;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpHeaders;
-import org.apache.http.HttpRequest;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpUriRequest;
 
 import com.gregmarut.resty.client.authentication.AuthenticationProvider;
 
@@ -19,7 +19,7 @@ public class BasicAuthenticationProvider implements AuthenticationProvider
 		this.basicAuth = BASIC + " " + new String(new Base64().encode(userpass.getBytes()));
 	}
 	
-	public void preRequest(final HttpRequest request)
+	public void preRequest(final HttpUriRequest request)
 	{
 		// set the authorization header
 		request.setHeader(HttpHeaders.AUTHORIZATION, basicAuth);
