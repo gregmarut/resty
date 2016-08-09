@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.gregmarut.resty.client.authentication.AuthenticationProvider;
@@ -30,7 +31,6 @@ public class OAuthPasswordAuthenticationProvider implements AuthenticationProvid
 	private static final Logger logger = LoggerFactory.getLogger(OAuthPasswordAuthenticationProvider.class);
 	
 	public static final String BEARER = "Bearer";
-	public static final String ACCESS_TOKEN = "access_token";
 	
 	private final String username;
 	private final String password;
@@ -40,10 +40,18 @@ public class OAuthPasswordAuthenticationProvider implements AuthenticationProvid
 	
 	private final String tokenEndpoint;
 	
-	private String token;
+	private final AuthenticationListener listener;
+	
+	private OAuthResponse oauthResponse;
 	
 	public OAuthPasswordAuthenticationProvider(final String username, String password, final String clientIdentifier,
 		final String clientPassword, final String tokenEndpoint)
+	{
+		this(username, password, clientIdentifier, clientPassword, tokenEndpoint, null);
+	}
+	
+	public OAuthPasswordAuthenticationProvider(final String username, String password, final String clientIdentifier,
+		final String clientPassword, final String tokenEndpoint, final AuthenticationListener listener)
 	{
 		this.username = username;
 		this.password = password;
@@ -52,16 +60,18 @@ public class OAuthPasswordAuthenticationProvider implements AuthenticationProvid
 		this.clientPassword = clientPassword;
 		
 		this.tokenEndpoint = tokenEndpoint;
+		
+		this.listener = listener;
 	}
 	
 	@Override
 	public void preRequest(final HttpUriRequest request)
 	{
 		// make sure the token is not null
-		if (null != token)
+		if (null != oauthResponse)
 		{
 			// set the authorization header
-			String bearerAuth = BEARER + " " + token;
+			String bearerAuth = BEARER + " " + oauthResponse.getAccessToken();
 			request.setHeader(HttpHeaders.AUTHORIZATION, bearerAuth);
 		}
 	}
@@ -106,9 +116,24 @@ public class OAuthPasswordAuthenticationProvider implements AuthenticationProvid
 				// read the response entity
 				InputStream entity = response.getEntity().getContent();
 				JsonElement jsonElement = new JsonParser().parse(new InputStreamReader(entity));
+				JsonObject jsonObject = jsonElement.getAsJsonObject();
+				
+				// create an oauth response object
+				OAuthResponse oauthResponse = new OAuthResponse();
+				oauthResponse.setAccessToken(jsonObject.get(OAuthResponse.ACCESS_TOKEN).getAsString());
+				oauthResponse.setTokenType(jsonObject.get(OAuthResponse.TOKEN_TYPE).getAsString());
+				oauthResponse.setExpiresIn(jsonObject.get(OAuthResponse.EXPIRES_IN).getAsLong());
+				oauthResponse.setScope(jsonObject.get(OAuthResponse.SCOPE).getAsString());
 				
 				// retrieve the access token
-				this.token = jsonElement.getAsJsonObject().get(ACCESS_TOKEN).getAsString();
+				this.oauthResponse = oauthResponse;
+				
+				// check to see if the listener is not null
+				if (null != listener)
+				{
+					// notify the listener of an authentication
+					listener.onAuthenticated(oauthResponse);
+				}
 				
 				return true;
 			}
@@ -122,5 +147,10 @@ public class OAuthPasswordAuthenticationProvider implements AuthenticationProvid
 			logger.info(e.getMessage(), e);
 			return false;
 		}
+	}
+	
+	public interface AuthenticationListener
+	{
+		void onAuthenticated(OAuthResponse oauthResponse);
 	}
 }
