@@ -14,4 +14,10 @@ public class ErrorController
 	{
 		throw new ServerException("500 Error");
 	}
+	
+	@RequestMapping(value = "/500/2")
+	public void error500_2()
+	{
+		throw new ServerException("500 Error");
+	}
 }

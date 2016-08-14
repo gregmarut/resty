@@ -40,4 +40,23 @@ public class ErrorIT
 			Assert.assertEquals("500 Error", errorBean.getMessage());
 		}
 	}
+	
+	@Test
+	public void error500_2Test()
+	{
+		try
+		{
+			errorProxy.error500_2();
+			
+			Assert.fail("Did not receive expected error.");
+		}
+		catch (WebServiceException e)
+		{
+			ErrorBean errorBean = (ErrorBean) e.getErrorEntity();
+			
+			Assert.assertNotNull(errorBean);
+			Assert.assertEquals(500, errorBean.getStatus());
+			Assert.assertEquals("500 Error", errorBean.getMessage());
+		}
+	}
 }

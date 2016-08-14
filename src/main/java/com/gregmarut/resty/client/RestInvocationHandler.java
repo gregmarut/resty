@@ -29,6 +29,8 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.gregmarut.resty.client.annotation.Expected;
 import com.gregmarut.resty.client.annotation.HttpHeaders;
@@ -54,6 +56,8 @@ import com.gregmarut.resty.serialization.Serializer;
  */
 public abstract class RestInvocationHandler implements InvocationHandler
 {
+	private static final Logger logger = LoggerFactory.getLogger(RestInvocationHandler.class);
+	
 	public static final String REGEX_VAR = "\\{([a-zA-Z0-9\\.]+?)\\}";
 	public static final String REGEX_DOMAIN_URL = "^[a-zA-Z]+://([a-zA-Z0-9\\.\\-]+)";
 	
@@ -423,50 +427,57 @@ public abstract class RestInvocationHandler implements InvocationHandler
 				}
 			}
 			
+			// get the expected status code
+			final int expectedStatusCode = (null != expected ? expected.statusCode() : Expected.DEFAULT_STATUS_CODE);
+			
 			// check to see if there is a response
 			if (null != response)
 			{
 				// check to see if there is a return type
 				if (null != expectedReturnType && !expectedReturnType.equals(void.class))
 				{
-					// check to see if the return type is a byte array
-					if (byte[].class.equals(expectedReturnType))
+					// using the status codes, check to see if this request was successful
+					if (statusCodeHandler.isSuccessful(statusCode, expectedStatusCode))
 					{
-						result = response;
-					}
-					else if (String.class.equals(expectedReturnType))
-					{
-						result = new String(response);
+						// check to see if the return type is a byte array
+						if (byte[].class.equals(expectedReturnType))
+						{
+							result = response;
+						}
+						else if (String.class.equals(expectedReturnType))
+						{
+							result = new String(response);
+						}
+						else
+						{
+							try
+							{
+								// deserialize the result
+								result = getSerializer().unmarshall(response, expectedReturnType);
+							}
+							catch (SerializationException e)
+							{
+								// create the error that will be reported
+								throw new UnexpectedResponseEntityException(e);
+							}
+						}
 					}
 					else
 					{
-						try
+						result = null;
+						
+						// make sure the error class is not null
+						if (null != errorClass)
 						{
-							// deserialize the result
-							result = getSerializer().unmarshall(response, expectedReturnType);
-						}
-						catch (SerializationException e)
-						{
-							// create the error that will be reported
-							UnexpectedResponseEntityException exception = new UnexpectedResponseEntityException(e);
-							
-							// make sure the error class is not null
-							if (null != errorClass)
+							try
 							{
-								try
-								{
-									// attempt to deserialze the error message
-									exception.setErrorEntity(getSerializer().unmarshall(response, errorClass));
-									throw exception;
-								}
-								catch (SerializationException e1)
-								{
-									throw exception;
-								}
+								// attempt to deserialze the error message
+								errorResult = getSerializer().unmarshall(response, errorClass);
 							}
-							else
+							catch (SerializationException e)
 							{
-								throw exception;
+								logger.warn(e.getMessage(), e);
+								logger.warn(new String(response));
 							}
 						}
 					}
@@ -485,7 +496,8 @@ public abstract class RestInvocationHandler implements InvocationHandler
 						}
 						catch (SerializationException e)
 						{
-							// ignore this error
+							logger.warn(e.getMessage(), e);
+							logger.warn(new String(response));
 						}
 					}
 				}
@@ -496,20 +508,8 @@ public abstract class RestInvocationHandler implements InvocationHandler
 				result = null;
 			}
 			
-			// get the expected status code
-			int expectedStatusCode = (null != expected ? expected.statusCode() : Expected.DEFAULT_STATUS_CODE);
-			
-			// check to see if the expected status code is set
-			if (expectedStatusCode != Expected.DEFAULT_STATUS_CODE)
-			{
-				// allow the subclass to handle the status code
-				statusCodeHandler.handleStatusCode(statusCode, expectedStatusCode, errorResult);
-			}
-			else
-			{
-				// allow the subclass to handle the status code
-				statusCodeHandler.handleStatusCode(statusCode, errorResult);
-			}
+			// allow the subclass to handle the status code
+			statusCodeHandler.verifyStatusCode(statusCode, expectedStatusCode, errorResult);
 		}
 		finally
 		{
