@@ -7,31 +7,6 @@
  ******************************************************************************/
 package com.gregmarut.resty.client;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.net.URLEncoder;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpParams;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.gregmarut.resty.client.annotation.Expected;
 import com.gregmarut.resty.client.annotation.HttpHeaders;
 import com.gregmarut.resty.client.annotation.HttpParameters;
@@ -48,10 +23,35 @@ import com.gregmarut.resty.client.exception.WebServiceException;
 import com.gregmarut.resty.client.exception.status.StatusCodeException;
 import com.gregmarut.resty.serialization.SerializationException;
 import com.gregmarut.resty.serialization.Serializer;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpParams;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.URLEncoder;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Handles methods invoked on proxy classes created for web service calls
- * 
+ *
  * @author Greg Marut
  */
 public abstract class RestInvocationHandler implements InvocationHandler
@@ -99,6 +99,23 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	@Override
 	public final Object invoke(final Object proxy, final Method method, final Object[] args) throws WebServiceException
 	{
+		//check to see if this method is being invoked on the core Object class which are not expected to be annotated and are not rest method
+		if (method.getDeclaringClass().equals(Object.class))
+		{
+			try
+			{
+				return method.invoke(method, args);
+			}
+			catch (IllegalAccessException e)
+			{
+				return null;
+			}
+			catch (InvocationTargetException e)
+			{
+				return null;
+			}
+		}
+		
 		// extract the rest method annotation
 		RestMethod restMethod = method.getAnnotation(RestMethod.class);
 		
@@ -153,7 +170,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	
 	/**
 	 * Creates a request that will be executed by the client
-	 * 
+	 *
 	 * @param url
 	 * @param entity
 	 * @param methodType
@@ -230,7 +247,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	
 	/**
 	 * Sets the headers and parameters if any are set
-	 * 
+	 *
 	 * @param method
 	 * @param request
 	 */
@@ -313,7 +330,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	
 	/**
 	 * Executes the request on the http client
-	 * 
+	 *
 	 * @param httpClient
 	 * @param request
 	 * @return
@@ -327,12 +344,11 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	
 	/**
 	 * Executes the request on the http client
-	 * 
+	 *
 	 * @param httpClient
 	 * @param request
-	 * @param allowAuthenticationAttempt
-	 *        if the request fails due to a 401 status code, this determines whether or not the
-	 *        authentication provider is allowed to attempt authentication and retry the request
+	 * @param allowAuthenticationAttempt if the request fails due to a 401 status code, this determines whether or not the
+	 *                                   authentication provider is allowed to attempt authentication and retry the request
 	 * @return
 	 * @throws WebServiceException
 	 */
@@ -384,7 +400,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	
 	/**
 	 * Handles the response that is returned from the http client
-	 * 
+	 *
 	 * @param httpResponse
 	 * @param expectedReturnType
 	 * @return
@@ -539,21 +555,21 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	
 	/**
 	 * Returns the factory that is responsible for creating rest request objects
-	 * 
+	 *
 	 * @return
 	 */
 	protected abstract RestRequestFactory getRestRequestFactory();
 	
 	/**
 	 * Returns the serializer that is responsible for marshalling and unmarshalling data
-	 * 
+	 *
 	 * @return
 	 */
 	protected abstract Serializer getSerializer();
 	
 	/**
 	 * Builds the URL based on the
-	 * 
+	 *
 	 * @param parameterMapper
 	 * @param restMethod
 	 * @param args
