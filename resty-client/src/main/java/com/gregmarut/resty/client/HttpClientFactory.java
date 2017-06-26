@@ -9,11 +9,6 @@
  ******************************************************************************/
 package com.gregmarut.resty.client;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponseInterceptor;
 import org.apache.http.client.CookieStore;
@@ -22,6 +17,11 @@ import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Provides a factory for creating HttpClients
@@ -131,7 +131,7 @@ public class HttpClientFactory
 	
 	/**
 	 * Puts a header to be used for each http request
-	 * 
+	 *
 	 * @param name
 	 * @param value
 	 */
@@ -142,7 +142,7 @@ public class HttpClientFactory
 	
 	/**
 	 * Returns the map of headers
-	 * 
+	 *
 	 * @return
 	 */
 	public Map<String, String> getHttpHeaders()

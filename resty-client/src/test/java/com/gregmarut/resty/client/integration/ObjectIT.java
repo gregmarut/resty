@@ -2,7 +2,7 @@ package com.gregmarut.resty.client.integration;
 
 import com.gregmarut.resty.bean.ErrorBean;
 import com.gregmarut.resty.bean.UserBean;
-import com.gregmarut.resty.client.RestProxyFactory;
+import com.gregmarut.resty.client.HttpRestProxyFactory;
 import com.gregmarut.resty.exception.WebServiceException;
 import com.gregmarut.resty.http.HostDetails;
 import com.gregmarut.resty.http.Scheme;
@@ -11,14 +11,14 @@ import org.junit.Test;
 
 public class ObjectIT
 {
-	private final RestProxyFactory restProxyFactory;
+	private final HttpRestProxyFactory restProxyFactory;
 	private final ObjectProxy objectProxy;
 	
 	public ObjectIT()
 	{
 		// set up the rest proxy factory
 		HostDetails hostDetails = new HostDetails(Scheme.HTTP, "localhost", null, 8080);
-		restProxyFactory = new RestProxyFactory(hostDetails);
+		restProxyFactory = new HttpRestProxyFactory(hostDetails);
 		restProxyFactory.setErrorClass(ErrorBean.class);
 		objectProxy = restProxyFactory.createProxy(ObjectProxy.class);
 	}

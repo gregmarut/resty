@@ -3,35 +3,35 @@
  * under the terms of the GNU Public License v3.0 which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/gpl.html Contributors: Greg Marut - initial API and implementation
  ******************************************************************************/
-package com.gregmarut.resty.client;
+package com.gregmarut.resty;
 
-import com.gregmarut.resty.DefaultStatusCodeHandler;
-import com.gregmarut.resty.StatusCodeHandler;
 import com.gregmarut.resty.serialization.GsonSerializer;
 import com.gregmarut.resty.serialization.Serializer;
 
-public class JSONInvocationHandler extends RestInvocationHandler
+public abstract class JSONInvocationHandler extends RestInvocationHandler
 {
+	public static final String JSON_TYPE = "application/json";
+	
 	private final RestRequestFactory restRequestFactory;
 	private final GsonSerializer serializer;
 	
-	public JSONInvocationHandler(final HttpClientFactory httpClientFactory, final String rootURL)
+	public JSONInvocationHandler(final String rootURL)
 	{
-		this(httpClientFactory, rootURL, new DefaultStatusCodeHandler());
+		this(rootURL, new DefaultStatusCodeHandler());
 	}
 	
-	public JSONInvocationHandler(final HttpClientFactory httpClientFactory, final String rootURL,
-			final StatusCodeHandler statusCodeHandler)
+	public JSONInvocationHandler(final String rootURL,
+		final StatusCodeHandler statusCodeHandler)
 	{
-		this(httpClientFactory, rootURL, statusCodeHandler, new GsonSerializer());
+		this(rootURL, statusCodeHandler, new GsonSerializer());
 	}
 	
-	public JSONInvocationHandler(final HttpClientFactory httpClientFactory, final String rootURL,
-			final StatusCodeHandler statusCodeHandler, final GsonSerializer serializer)
+	public JSONInvocationHandler(final String rootURL, final StatusCodeHandler statusCodeHandler,
+		final GsonSerializer serializer)
 	{
-		super(httpClientFactory, rootURL, statusCodeHandler);
+		super(rootURL, statusCodeHandler);
 		
-		restRequestFactory = new RestRequestFactory(RestRequestFactory.JSON_TYPE);
+		restRequestFactory = new RestRequestFactory(JSON_TYPE);
 		this.serializer = serializer;
 	}
 	

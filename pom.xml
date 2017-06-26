@@ -18,6 +18,7 @@
 	<modules>
 		<module>resty-core</module>
 		<module>resty-client</module>
+		<module>resty-android</module>
 	</modules>
 
 	<licenses>
@@ -42,6 +43,9 @@
 	</developers>
 
 	<properties>
+		<!--Set the compiler version -->
+		<maven.compiler.source>1.7</maven.compiler.source>
+		<maven.compiler.target>1.7</maven.compiler.target>
 
 		<!-- Test Dependency Versions -->
 		<version.spring.security>4.0.2.RELEASE</version.spring.security>

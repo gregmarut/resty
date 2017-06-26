@@ -5,18 +5,14 @@
  * available at
  * http://www.gnu.org/licenses/gpl.html Contributors: Greg Marut - initial API and implementation
  ******************************************************************************/
-package com.gregmarut.resty.client;
+package com.gregmarut.resty;
 
-import com.gregmarut.resty.DefaultStatusCodeHandler;
-import com.gregmarut.resty.MethodType;
-import com.gregmarut.resty.StatusCodeHandler;
 import com.gregmarut.resty.annotation.Expected;
 import com.gregmarut.resty.annotation.HttpHeaders;
 import com.gregmarut.resty.annotation.HttpParameters;
 import com.gregmarut.resty.annotation.NameValue;
 import com.gregmarut.resty.annotation.Parameter;
 import com.gregmarut.resty.annotation.RestMethod;
-import com.gregmarut.resty.client.authentication.AuthenticationProvider;
 import com.gregmarut.resty.exception.InvalidMethodTypeException;
 import com.gregmarut.resty.exception.InvalidVariablePathException;
 import com.gregmarut.resty.exception.MissingAnnotationException;
@@ -24,30 +20,19 @@ import com.gregmarut.resty.exception.UnexpectedEntityException;
 import com.gregmarut.resty.exception.UnexpectedResponseEntityException;
 import com.gregmarut.resty.exception.WebServiceException;
 import com.gregmarut.resty.exception.status.StatusCodeException;
+import com.gregmarut.resty.http.request.RestRequest;
+import com.gregmarut.resty.http.response.RestResponse;
 import com.gregmarut.resty.serialization.SerializationException;
 import com.gregmarut.resty.serialization.Serializer;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URLEncoder;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -68,9 +53,6 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	private final Pattern varPattern;
 	private final Pattern domainPattern;
 	
-	// holds the http client factory
-	protected final HttpClientFactory httpClientFactory;
-	
 	// holds the root URL
 	protected final String rootURL;
 	
@@ -80,18 +62,13 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	// determines which class to use to hold the error entities
 	private Class<?> errorClass;
 	
-	// holds the authentication provider
-	private AuthenticationProvider authenticationProvider;
-	
-	public RestInvocationHandler(final HttpClientFactory httpClientFactory, final String rootURL)
+	public RestInvocationHandler(final String rootURL)
 	{
-		this(httpClientFactory, rootURL, new DefaultStatusCodeHandler());
+		this(rootURL, new DefaultStatusCodeHandler());
 	}
 	
-	public RestInvocationHandler(final HttpClientFactory httpClientFactory, final String rootURL,
-		final StatusCodeHandler statusCodeHandler)
+	public RestInvocationHandler(final String rootURL, final StatusCodeHandler statusCodeHandler)
 	{
-		this.httpClientFactory = httpClientFactory;
 		this.rootURL = rootURL;
 		this.statusCodeHandler = statusCodeHandler;
 		
@@ -109,11 +86,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 			{
 				return method.invoke(method, args);
 			}
-			catch (IllegalAccessException e)
-			{
-				return null;
-			}
-			catch (InvocationTargetException e)
+			catch (InvocationTargetException | IllegalAccessException e)
 			{
 				return null;
 			}
@@ -138,37 +111,20 @@ public abstract class RestInvocationHandler implements InvocationHandler
 		// build the uri
 		String url = buildURL(parameterMapper, restMethod, args);
 		
-		// holds the http client to use
-		HttpClient httpClient = null;
+		// create the request
+		RestRequest request = createRequest(url, parameterMapper.getBodyArgument(), restMethod.method());
 		
-		try
-		{
-			// create a new http client
-			httpClient = httpClientFactory.createHttpClient();
-			
-			// create the request
-			HttpUriRequest request = createRequest(url, parameterMapper.getBodyArgument(), restMethod.method());
-			
-			// set the headers and parameters
-			setHeadersAndParameters(method, request, parameterMapper);
-			
-			// execute the request
-			HttpResponse response = executeRequest(httpClient, request);
-			
-			// determine the expected return type
-			Class<?> expectedReturnType = method.getReturnType();
-			
-			// handle the response
-			return handleResponse(response, expectedReturnType, expected);
-		}
-		finally
-		{
-			// make sure the client is not null
-			if (null != httpClient && null != httpClient.getConnectionManager())
-			{
-				httpClient.getConnectionManager().shutdown();
-			}
-		}
+		// set the headers and parameters
+		setHeadersAndParameters(method, request, parameterMapper);
+		
+		// execute the request
+		RestResponse response = executeRequest(request);
+		
+		// determine the expected return type
+		Class<?> expectedReturnType = method.getReturnType();
+		
+		// handle the response
+		return handleResponse(response, expectedReturnType, expected);
 	}
 	
 	/**
@@ -180,11 +136,11 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	 * @return
 	 * @throws WebServiceException
 	 */
-	protected HttpUriRequest createRequest(final String url, final Object entity, final MethodType methodType)
+	protected RestRequest createRequest(final String url, final Object entity, final MethodType methodType)
 		throws WebServiceException
 	{
 		// holds the http request
-		HttpUriRequest request;
+		RestRequest request;
 		
 		// holds the entity data to send
 		byte[] data;
@@ -254,23 +210,9 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	 * @param method
 	 * @param request
 	 */
-	protected void setHeadersAndParameters(final Method method, final HttpUriRequest request,
+	protected void setHeadersAndParameters(final Method method, final RestRequest request,
 		final ParameterMapper parameterMapper)
 	{
-		// retrieve the list of http headers from the factory
-		Set<Entry<String, String>> httpHeaderEntries = httpClientFactory.getHttpHeaders().entrySet();
-		
-		// make sure there are values in the set
-		if (null != httpHeaderEntries && !httpHeaderEntries.isEmpty())
-		{
-			// for each entry in the set
-			for (Entry<String, String> entry : httpHeaderEntries)
-			{
-				// set the header
-				request.setHeader(entry.getKey(), entry.getValue());
-			}
-		}
-		
 		// retrieve the header and parameter annotations
 		HttpHeaders httpHeaders = method.getAnnotation(HttpHeaders.class);
 		HttpParameters httpParameters = method.getAnnotation(HttpParameters.class);
@@ -312,19 +254,8 @@ public abstract class RestInvocationHandler implements InvocationHandler
 					// make sure this name value is not null
 					if (null != nameValue)
 					{
-						// retrieve the parameters from the request
-						HttpParams params = request.getParams();
-						
-						// check to see if the params is null
-						if (null == params)
-						{
-							// create a new params object
-							params = new BasicHttpParams();
-							request.setParams(params);
-						}
-						
 						// set the parameter
-						params.setParameter(nameValue.name(), replaceVariables(nameValue.value(), parameterMapper));
+						request.setParameter(nameValue.name(), replaceVariables(nameValue.value(), parameterMapper));
 					}
 				}
 			}
@@ -332,172 +263,67 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	}
 	
 	/**
-	 * Executes the request on the http client
+	 * Executes the request
 	 *
-	 * @param httpClient
 	 * @param request
 	 * @return
 	 * @throws WebServiceException
 	 */
-	protected HttpResponse executeRequest(final HttpClient httpClient, final HttpUriRequest request)
-		throws WebServiceException
-	{
-		return executeRequest(httpClient, request, true);
-	}
-	
-	/**
-	 * Executes the request on the http client
-	 *
-	 * @param httpClient
-	 * @param request
-	 * @param allowAuthenticationAttempt if the request fails due to a 401 status code, this determines whether or not the
-	 *                                   authentication provider is allowed to attempt authentication and retry the request
-	 * @return
-	 * @throws WebServiceException
-	 */
-	protected HttpResponse executeRequest(final HttpClient httpClient, final HttpUriRequest request,
-		final boolean allowAuthenticationAttempt) throws WebServiceException
-	{
-		try
-		{
-			// check to see if there is an authentication provider
-			if (null != authenticationProvider)
-			{
-				// notify the authentication provider of the request before it is executed
-				authenticationProvider.preRequest(request);
-			}
-			
-			// execute the call
-			HttpResponse response = httpClient.execute(request);
-			
-			// check to see if there is an authentication provider and if response is an
-			// unauthorized
-			if (null != authenticationProvider
-				&& response.getStatusLine().getStatusCode() == HttpStatus.SC_UNAUTHORIZED)
-			{
-				// check to see if authentication is allowed
-				if (allowAuthenticationAttempt)
-				{
-					// check to see if there is a www-authenticate header
-					Header wwwAuthHeader = response.getFirstHeader(org.apache.http.HttpHeaders.WWW_AUTHENTICATE);
-					if (null != wwwAuthHeader)
-					{
-						// let the authentication provider execute any authentication steps needed
-						if (authenticationProvider.doAuthentication(httpClient))
-						{
-							// retry the request but do not allow authentication again if it fails a
-							// second time
-							response = executeRequest(httpClient, request, false);
-						}
-					}
-				}
-			}
-			
-			return response;
-		}
-		catch (IOException e)
-		{
-			throw new WebServiceException(e);
-		}
-	}
+	protected abstract RestResponse executeRequest(final RestRequest request) throws WebServiceException;
 	
 	/**
 	 * Handles the response that is returned from the http client
 	 *
-	 * @param httpResponse
+	 * @param restResponse
 	 * @param expectedReturnType
 	 * @return
 	 * @throws StatusCodeException
 	 * @throws UnexpectedResponseEntityException
 	 */
-	protected Object handleResponse(final HttpResponse httpResponse, final Class<?> expectedReturnType,
+	protected Object handleResponse(final RestResponse restResponse, final Class<?> expectedReturnType,
 		final Expected expected) throws WebServiceException, UnexpectedResponseEntityException
 	{
 		Object result;
 		Object errorResult = null;
 		
-		// retrieve the http entity
-		HttpEntity httpEntity = httpResponse.getEntity();
-		
 		// holds the status code
-		final int statusCode = httpResponse.getStatusLine().getStatusCode();
+		final int statusCode = restResponse.getStatusCode();
 		
-		try
+		// holds the byte array of the response from the webservice call
+		byte[] response = restResponse.getData();
+		
+		// get the expected status code
+		final int expectedStatusCode = (null != expected ? expected.statusCode() : Expected.DEFAULT_STATUS_CODE);
+		
+		// check to see if there is a response
+		if (null != response)
 		{
-			// holds the byte array of the response from the webservice call
-			byte[] response = null;
-			
-			// check to see if there is a response entity
-			if (null != httpEntity)
+			// check to see if there is a return type
+			if (null != expectedReturnType && !expectedReturnType.equals(void.class))
 			{
-				try
+				// using the status codes, check to see if this request was successful
+				if (statusCodeHandler.isSuccessful(statusCode, expectedStatusCode))
 				{
-					// read the response and convert it to an object
-					ByteArrayOutputStream out = new ByteArrayOutputStream();
-					httpEntity.writeTo(out);
-					out.close();
-					
-					// set the response array
-					response = out.toByteArray();
-				}
-				catch (IOException e)
-				{
-					throw new UnexpectedResponseEntityException(e);
-				}
-			}
-			
-			// get the expected status code
-			final int expectedStatusCode = (null != expected ? expected.statusCode() : Expected.DEFAULT_STATUS_CODE);
-			
-			// check to see if there is a response
-			if (null != response)
-			{
-				// check to see if there is a return type
-				if (null != expectedReturnType && !expectedReturnType.equals(void.class))
-				{
-					// using the status codes, check to see if this request was successful
-					if (statusCodeHandler.isSuccessful(statusCode, expectedStatusCode))
+					// check to see if the return type is a byte array
+					if (byte[].class.equals(expectedReturnType))
 					{
-						// check to see if the return type is a byte array
-						if (byte[].class.equals(expectedReturnType))
-						{
-							result = response;
-						}
-						else if (String.class.equals(expectedReturnType))
-						{
-							result = new String(response);
-						}
-						else
-						{
-							try
-							{
-								// deserialize the result
-								result = getSerializer().unmarshall(response, expectedReturnType);
-							}
-							catch (SerializationException e)
-							{
-								// create the error that will be reported
-								throw new UnexpectedResponseEntityException(e);
-							}
-						}
+						result = response;
+					}
+					else if (String.class.equals(expectedReturnType))
+					{
+						result = new String(response);
 					}
 					else
 					{
-						result = null;
-						
-						// make sure the error class is not null
-						if (null != errorClass)
+						try
 						{
-							try
-							{
-								// attempt to deserialze the error message
-								errorResult = getSerializer().unmarshall(response, errorClass);
-							}
-							catch (SerializationException e)
-							{
-								logger.warn(e.getMessage(), e);
-								logger.warn(new String(response));
-							}
+							// deserialize the result
+							result = getSerializer().unmarshall(response, expectedReturnType);
+						}
+						catch (SerializationException e)
+						{
+							// create the error that will be reported
+							throw new UnexpectedResponseEntityException(e);
 						}
 					}
 				}
@@ -523,34 +349,32 @@ public abstract class RestInvocationHandler implements InvocationHandler
 			}
 			else
 			{
-				// there is no result
 				result = null;
-			}
-			
-			// allow the subclass to handle the status code
-			statusCodeHandler.verifyStatusCode(statusCode, expectedStatusCode, errorResult);
-		}
-		finally
-		{
-			try
-			{
-				InputStream is = httpEntity.getContent();
 				
-				// make sure the input stream is not null
-				if (null != is)
+				// make sure the error class is not null
+				if (null != errorClass)
 				{
-					is.close();
+					try
+					{
+						// attempt to deserialze the error message
+						errorResult = getSerializer().unmarshall(response, errorClass);
+					}
+					catch (SerializationException e)
+					{
+						logger.warn(e.getMessage(), e);
+						logger.warn(new String(response));
+					}
 				}
 			}
-			catch (IllegalStateException e)
-			{
-				// ignore
-			}
-			catch (IOException e)
-			{
-				// ignore
-			}
 		}
+		else
+		{
+			// there is no result
+			result = null;
+		}
+		
+		// allow the subclass to handle the status code
+		statusCodeHandler.verifyStatusCode(statusCode, expectedStatusCode, errorResult);
 		
 		// return the result
 		return result;
@@ -670,20 +494,5 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	public void setErrorClass(Class<?> errorClass)
 	{
 		this.errorClass = errorClass;
-	}
-	
-	public HttpClientFactory getHttpClientFactory()
-	{
-		return httpClientFactory;
-	}
-	
-	public AuthenticationProvider getAuthenticationProvider()
-	{
-		return authenticationProvider;
-	}
-	
-	public void setAuthenticationProvider(AuthenticationProvider authenticationProvider)
-	{
-		this.authenticationProvider = authenticationProvider;
 	}
 }

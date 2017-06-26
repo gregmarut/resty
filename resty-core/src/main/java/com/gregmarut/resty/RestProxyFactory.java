@@ -5,78 +5,30 @@
  * available at
  * http://www.gnu.org/licenses/gpl.html Contributors: Greg Marut - initial API and implementation
  ******************************************************************************/
-package com.gregmarut.resty.client;
+package com.gregmarut.resty;
 
 import com.gregmarut.resty.annotation.RestMethod;
 import com.gregmarut.resty.annotation.RestProxy;
-import com.gregmarut.resty.client.authentication.AuthenticationProvider;
 import com.gregmarut.resty.exception.InvalidProxyException;
 import com.gregmarut.resty.exception.WebServiceException;
-import com.gregmarut.resty.http.HostDetails;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
 public class RestProxyFactory
 {
-	// holds the factory that will handle new and existing clients
-	private final HttpClientFactory httpClientFactory;
-	
 	// holds the invocation handler
-	private final RestInvocationHandler restInvocationHandler;
-	
-	public RestProxyFactory(final String hostUrl)
-	{
-		this(hostUrl, new HttpClientFactory());
-	}
-	
-	public RestProxyFactory(final String hostUrl, final HttpClientFactory httpClientFactory)
-	{
-		this.httpClientFactory = httpClientFactory;
-		this.restInvocationHandler = new JSONInvocationHandler(httpClientFactory, hostUrl);
-	}
-	
-	public RestProxyFactory(final HostDetails hostDetails)
-	{
-		this(hostDetails, new HttpClientFactory());
-	}
-	
-	public RestProxyFactory(final HostDetails hostDetails, final HttpClientFactory httpClientFactory)
-	{
-		this.httpClientFactory = httpClientFactory;
-		this.restInvocationHandler = new JSONInvocationHandler(httpClientFactory, hostDetails.getUrl());
-	}
+	protected final RestInvocationHandler restInvocationHandler;
 	
 	public RestProxyFactory(final RestInvocationHandler restInvocationHandler)
 	{
-		httpClientFactory = restInvocationHandler.getHttpClientFactory();
 		this.restInvocationHandler = restInvocationHandler;
-	}
-	
-	/**
-	 * Sets an authentication provider for the api requests
-	 * 
-	 * @param authenticationProvider
-	 */
-	public void setAuthenticationProvider(final AuthenticationProvider authenticationProvider)
-	{
-		restInvocationHandler.setAuthenticationProvider(authenticationProvider);
-	}
-	
-	public void clearAuthenticationProvider()
-	{
-		restInvocationHandler.setAuthenticationProvider(null);
-	}
-	
-	public void eraseCookies()
-	{
-		httpClientFactory.eraseCookies();
 	}
 	
 	/**
 	 * Creates a proxy of the specified interface. Interface must be properly annotated with
 	 * {@link RestProxy}.
-	 * 
+	 *
 	 * @param clazz
 	 * @return
 	 */
@@ -124,14 +76,14 @@ public class RestProxyFactory
 		
 		// create and return a new instance of the proxy
 		return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[]
-		{
-			clazz
-		}, restInvocationHandler);
+			{
+				clazz
+			}, restInvocationHandler);
 	}
 	
 	/**
 	 * Validates that the method provided throws the {@link WebServiceException}
-	 * 
+	 *
 	 * @param method
 	 */
 	private void validateThrowsExeception(final Method method)
@@ -157,18 +109,18 @@ public class RestProxyFactory
 			+ " is missing throws " + WebServiceException.class.getName());
 	}
 	
-	public HttpClientFactory getHttpClientFactory()
-	{
-		return httpClientFactory;
-	}
-	
 	/**
 	 * Sets the class that represents an error entity
-	 * 
+	 *
 	 * @param errorClass
 	 */
 	public void setErrorClass(Class<?> errorClass)
 	{
 		restInvocationHandler.setErrorClass(errorClass);
+	}
+	
+	public RestInvocationHandler getRestInvocationHandler()
+	{
+		return restInvocationHandler;
 	}
 }

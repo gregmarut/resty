@@ -7,13 +7,13 @@ public class NonProxyMethodTest
 {
 	private static final String ROOT = "http://www.example.com";
 	
-	private RestProxyFactory restProxyHandler;
+	private HttpRestProxyFactory restProxyHandler;
 	private TestInterfaceProxy proxy;
 	
 	@Before
 	public void init()
 	{
-		restProxyHandler = new RestProxyFactory(ROOT);
+		restProxyHandler = new HttpRestProxyFactory(ROOT);
 		proxy = restProxyHandler.createProxy(TestInterfaceProxy.class);
 	}
 	

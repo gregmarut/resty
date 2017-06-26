@@ -1,6 +1,5 @@
 package com.gregmarut.resty;
 
-import com.gregmarut.resty.client.RestInvocationHandler;
 import org.junit.Assert;
 import org.junit.Test;
 

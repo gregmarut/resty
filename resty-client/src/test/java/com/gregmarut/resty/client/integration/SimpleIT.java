@@ -1,6 +1,6 @@
 package com.gregmarut.resty.client.integration;
 
-import com.gregmarut.resty.client.RestProxyFactory;
+import com.gregmarut.resty.client.HttpRestProxyFactory;
 import com.gregmarut.resty.exception.WebServiceException;
 import com.gregmarut.resty.http.HostDetails;
 import com.gregmarut.resty.http.Scheme;
@@ -9,14 +9,14 @@ import org.junit.Test;
 
 public class SimpleIT
 {
-	private final RestProxyFactory restProxyFactory;
+	private final HttpRestProxyFactory restProxyFactory;
 	private final SimpleProxy simpleProxy;
 	
 	public SimpleIT()
 	{
 		// set up the rest proxy factory
 		HostDetails hostDetails = new HostDetails(Scheme.HTTP, "localhost", null, 8080);
-		restProxyFactory = new RestProxyFactory(hostDetails);
+		restProxyFactory = new HttpRestProxyFactory(hostDetails);
 		simpleProxy = restProxyFactory.createProxy(SimpleProxy.class);
 	}
 	

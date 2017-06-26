@@ -8,20 +8,20 @@
  * Contributors:
  *    Greg Marut - initial API and implementation
  ******************************************************************************/
-package com.gregmarut.resty.client;
+package com.gregmarut.resty;
+
+import com.gregmarut.resty.annotation.Body;
+import com.gregmarut.resty.annotation.Parameter;
+import com.gregmarut.resty.exception.ConflictingAnnotationException;
+import com.gregmarut.resty.exception.DuplicateParameterNameException;
+import com.gregmarut.resty.exception.MultipleBodyException;
+import com.gregmarut.resty.exception.ParameterNotFoundException;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.gregmarut.resty.annotation.Parameter;
-import com.gregmarut.resty.exception.ConflictingAnnotationException;
-import com.gregmarut.resty.exception.ParameterNotFoundException;
-import com.gregmarut.resty.annotation.Body;
-import com.gregmarut.resty.exception.DuplicateParameterNameException;
-import com.gregmarut.resty.exception.MultipleBodyException;
 
 /**
  * Responsible for the mapping of arguments to their name
