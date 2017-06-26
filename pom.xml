@@ -9,10 +9,16 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.gregmarut.resty</groupId>
 	<artifactId>resty</artifactId>
+	<packaging>pom</packaging>
 	<version>1.3.2-SNAPSHOT</version>
 	<name>Resty</name>
 	<description>Proxy based REST client</description>
 	<url>https://github.com/gregmarut/resty/</url>
+
+	<modules>
+		<module>resty-core</module>
+		<module>resty-client</module>
+	</modules>
 
 	<licenses>
 		<license>
@@ -47,22 +53,6 @@
 	</properties>
 
 	<dependencies>
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-			<version>4.5.2</version>
-		</dependency>
-		<dependency>
-			<groupId>com.google.code.gson</groupId>
-			<artifactId>gson</artifactId>
-			<version>2.2.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>${version.slf4j}</version>
-		</dependency>
-
 		<!-- Test -->
 		<dependency>
 			<groupId>junit</groupId>
