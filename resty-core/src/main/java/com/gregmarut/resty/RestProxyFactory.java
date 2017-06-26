@@ -15,12 +15,12 @@ import com.gregmarut.resty.exception.WebServiceException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-public class RestProxyFactory
+public class RestProxyFactory<E extends RestInvocationHandler>
 {
 	// holds the invocation handler
-	protected final RestInvocationHandler restInvocationHandler;
+	protected final E restInvocationHandler;
 	
-	public RestProxyFactory(final RestInvocationHandler restInvocationHandler)
+	public RestProxyFactory(final E restInvocationHandler)
 	{
 		this.restInvocationHandler = restInvocationHandler;
 	}
@@ -119,7 +119,7 @@ public class RestProxyFactory
 		restInvocationHandler.setErrorClass(errorClass);
 	}
 	
-	public RestInvocationHandler getRestInvocationHandler()
+	public E getRestInvocationHandler()
 	{
 		return restInvocationHandler;
 	}

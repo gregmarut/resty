@@ -10,7 +10,7 @@ package com.gregmarut.resty.client;
 import com.gregmarut.resty.RestProxyFactory;
 import com.gregmarut.resty.http.HostDetails;
 
-public class HttpRestProxyFactory extends RestProxyFactory
+public class HttpRestProxyFactory extends RestProxyFactory<HttpInvocationHandler>
 {
 	// holds the factory that will handle new and existing clients
 	private final HttpClientFactory httpClientFactory;
@@ -51,11 +51,5 @@ public class HttpRestProxyFactory extends RestProxyFactory
 	public HttpClientFactory getHttpClientFactory()
 	{
 		return httpClientFactory;
-	}
-	
-	@Override
-	public HttpInvocationHandler getRestInvocationHandler()
-	{
-		return (HttpInvocationHandler) super.getRestInvocationHandler();
 	}
 }
