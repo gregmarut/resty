@@ -16,5 +16,12 @@
 			<artifactId>resty-core</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+
+		<dependency>
+			<groupId>com.gregmarut.resty</groupId>
+			<artifactId>server-it</artifactId>
+			<version>${project.version}</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 </project>

@@ -48,6 +48,10 @@
 		<maven.compiler.source>1.7</maven.compiler.source>
 		<maven.compiler.target>1.7</maven.compiler.target>
 
+		<version.gson>2.2.2</version.gson>
+		<version.commonsio>2.5</version.commonsio>
+		<version.apachehttp>4.5.2</version.apachehttp>
+
 		<!-- Test Dependency Versions -->
 		<version.spring.security>4.0.2.RELEASE</version.spring.security>
 		<version.cglib>3.1</version.cglib>
