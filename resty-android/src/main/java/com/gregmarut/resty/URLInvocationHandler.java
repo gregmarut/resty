@@ -7,6 +7,7 @@ import com.gregmarut.resty.serialization.GsonSerializer;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -37,14 +38,29 @@ public class URLInvocationHandler extends JSONInvocationHandler
 		{
 			//open a new url connection for this request
 			HttpURLConnection httpURLConnection = openUrlConnection(request);
-			byte[] data = IOUtils.toByteArray(httpURLConnection.getInputStream());
+			
+			final int responseCode = httpURLConnection.getResponseCode();
+			final byte[] data = IOUtils.toByteArray(readStream(httpURLConnection, responseCode));
 			
 			//create a new rest response
-			return new RestResponse(httpURLConnection.getResponseCode(), data);
+			return new RestResponse(responseCode, data);
 		}
 		catch (IOException e)
 		{
 			throw new WebServiceException(e);
+		}
+	}
+	
+	private InputStream readStream(final HttpURLConnection httpURLConnection, final int responseCode) throws IOException
+	{
+		//check to see if the the response is less than the error codes
+		if (responseCode < HttpURLConnection.HTTP_BAD_REQUEST)
+		{
+			return httpURLConnection.getInputStream();
+		}
+		else
+		{
+			return httpURLConnection.getErrorStream();
 		}
 	}
 	
@@ -75,6 +91,7 @@ public class URLInvocationHandler extends JSONInvocationHandler
 		if (null != request.getData())
 		{
 			//write the data to the output stream
+			connection.setDoOutput(true);
 			OutputStream os = connection.getOutputStream();
 			IOUtils.write(request.getData(), os);
 		}
