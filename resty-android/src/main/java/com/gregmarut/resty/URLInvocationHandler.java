@@ -12,11 +12,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.List;
 import java.util.Map;
 
-public class URLInvocationHandler extends JSONInvocationHandler<URLConnection>
+public class URLInvocationHandler extends JSONInvocationHandler
 {
 	public URLInvocationHandler(final String rootURL)
 	{

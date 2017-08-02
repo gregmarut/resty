@@ -3,9 +3,8 @@ package com.gregmarut.resty.client.authentication.oauth2;
 import com.gregmarut.resty.authentication.AuthenticationProvider;
 import com.gregmarut.resty.http.request.RestRequest;
 import org.apache.http.HttpHeaders;
-import org.apache.http.client.HttpClient;
 
-public class OAuthTokenAuthenticationProvider implements AuthenticationProvider<HttpClient>
+public class OAuthTokenAuthenticationProvider implements AuthenticationProvider
 {
 	public static final String BEARER = "Bearer";
 	
@@ -30,7 +29,7 @@ public class OAuthTokenAuthenticationProvider implements AuthenticationProvider<
 	}
 	
 	@Override
-	public boolean doAuthentication(final HttpClient httpClient)
+	public boolean doAuthentication()
 	{
 		// if it didnt work the first time, its not going to work now. There is nothing special is
 		// needed for basic auth

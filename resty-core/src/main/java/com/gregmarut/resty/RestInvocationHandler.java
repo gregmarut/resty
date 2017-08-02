@@ -43,7 +43,7 @@ import java.util.regex.Pattern;
  *
  * @author Greg Marut
  */
-public abstract class RestInvocationHandler<C> implements InvocationHandler
+public abstract class RestInvocationHandler implements InvocationHandler
 {
 	private static final Logger logger = LoggerFactory.getLogger(RestInvocationHandler.class);
 	
@@ -64,7 +64,7 @@ public abstract class RestInvocationHandler<C> implements InvocationHandler
 	protected final StatusCodeHandler statusCodeHandler;
 	
 	// holds the authentication provider
-	private AuthenticationProvider<C> authenticationProvider;
+	private AuthenticationProvider authenticationProvider;
 	
 	// determines which class to use to hold the error entities
 	private Class<?> errorClass;
@@ -503,12 +503,12 @@ public abstract class RestInvocationHandler<C> implements InvocationHandler
 		this.errorClass = errorClass;
 	}
 	
-	public AuthenticationProvider<C> getAuthenticationProvider()
+	public AuthenticationProvider getAuthenticationProvider()
 	{
 		return authenticationProvider;
 	}
 	
-	public void setAuthenticationProvider(final AuthenticationProvider<C> authenticationProvider)
+	public void setAuthenticationProvider(final AuthenticationProvider authenticationProvider)
 	{
 		this.authenticationProvider = authenticationProvider;
 	}

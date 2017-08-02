@@ -2,7 +2,7 @@ package com.gregmarut.resty.authentication;
 
 import com.gregmarut.resty.http.request.RestRequest;
 
-public interface AuthenticationProvider<C>
+public interface AuthenticationProvider
 {
 	/**
 	 * Called before each request is made to the server
@@ -17,5 +17,5 @@ public interface AuthenticationProvider<C>
 	 *
 	 * @return whether or not the authentication was successful
 	 */
-	boolean doAuthentication(C httpClient);
+	boolean doAuthentication();
 }

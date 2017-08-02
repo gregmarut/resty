@@ -8,7 +8,7 @@ package com.gregmarut.resty;
 import com.gregmarut.resty.serialization.GsonSerializer;
 import com.gregmarut.resty.serialization.Serializer;
 
-public abstract class JSONInvocationHandler<C> extends RestInvocationHandler<C>
+public abstract class JSONInvocationHandler extends RestInvocationHandler
 {
 	public static final String JSON_TYPE = "application/json";
 	

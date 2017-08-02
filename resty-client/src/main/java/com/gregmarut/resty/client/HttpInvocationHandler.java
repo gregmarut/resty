@@ -12,7 +12,6 @@ import com.gregmarut.resty.http.response.RestResponseBuilder;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -26,7 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Map;
 
-public class HttpInvocationHandler extends JSONInvocationHandler<HttpClient>
+public class HttpInvocationHandler extends JSONInvocationHandler
 {
 	// holds the http client factory
 	protected final HttpClientFactory httpClientFactory;
@@ -77,7 +76,7 @@ public class HttpInvocationHandler extends JSONInvocationHandler<HttpClient>
 	{
 		try
 		{
-			final AuthenticationProvider<HttpClient> authenticationProvider = getAuthenticationProvider();
+			final AuthenticationProvider authenticationProvider = getAuthenticationProvider();
 			
 			// check to see if there is an authentication provider
 			if (null != authenticationProvider)
@@ -108,7 +107,7 @@ public class HttpInvocationHandler extends JSONInvocationHandler<HttpClient>
 						if (null != wwwAuthHeader)
 						{
 							// let the authentication provider execute any authentication steps needed
-							if (authenticationProvider.doAuthentication(httpClient))
+							if (authenticationProvider.doAuthentication())
 							{
 								// retry the request but do not allow authentication again if it fails a
 								// second time
