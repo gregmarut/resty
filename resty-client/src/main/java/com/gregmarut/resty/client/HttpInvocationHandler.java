@@ -3,7 +3,6 @@ package com.gregmarut.resty.client;
 import com.gregmarut.resty.DefaultStatusCodeHandler;
 import com.gregmarut.resty.JSONInvocationHandler;
 import com.gregmarut.resty.StatusCodeHandler;
-import com.gregmarut.resty.authentication.AuthenticationProvider;
 import com.gregmarut.resty.exception.UnexpectedResponseEntityException;
 import com.gregmarut.resty.exception.WebServiceException;
 import com.gregmarut.resty.http.request.RestRequest;
@@ -11,7 +10,6 @@ import com.gregmarut.resty.http.response.RestResponse;
 import com.gregmarut.resty.http.response.RestResponseBuilder;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -49,42 +47,11 @@ public class HttpInvocationHandler extends JSONInvocationHandler
 	 * @return
 	 * @throws WebServiceException
 	 */
+	@Override
 	protected RestResponse executeRequest(final RestRequest restRequest) throws WebServiceException
 	{
 		try (CloseableHttpClient httpClient = httpClientFactory.createHttpClient())
 		{
-			return executeRequest(httpClient, restRequest, true);
-		}
-		catch (IOException e)
-		{
-			throw new WebServiceException(e);
-		}
-	}
-	
-	/**
-	 * Executes the request on the http client
-	 *
-	 * @param httpClient
-	 * @param restRequest
-	 * @param allowAuthenticationAttempt if the request fails due to a 401 status code, this determines whether or not the authentication provider is
-	 *                                   allowed to attempt authentication and retry the request
-	 * @return
-	 * @throws WebServiceException
-	 */
-	protected RestResponse executeRequest(final CloseableHttpClient httpClient, final RestRequest restRequest,
-		final boolean allowAuthenticationAttempt) throws WebServiceException
-	{
-		try
-		{
-			final AuthenticationProvider authenticationProvider = getAuthenticationProvider();
-			
-			// check to see if there is an authentication provider
-			if (null != authenticationProvider)
-			{
-				// notify the authentication provider of the request before it is executed
-				authenticationProvider.preRequest(restRequest);
-			}
-			
 			//convert the rest request to an http uri request
 			HttpUriRequest request = toHttpUriRequest(restRequest);
 			
@@ -94,28 +61,6 @@ public class HttpInvocationHandler extends JSONInvocationHandler
 				// retrieve the http entity and status code
 				final int statusCode = httpResponse.getStatusLine().getStatusCode();
 				final HttpEntity httpEntity = httpResponse.getEntity();
-				
-				// check to see if there is an authentication provider and if response is an
-				// unauthorized
-				if (null != authenticationProvider && HttpStatus.SC_UNAUTHORIZED == statusCode)
-				{
-					// check to see if authentication is allowed
-					if (allowAuthenticationAttempt)
-					{
-						// check to see if there is a www-authenticate header
-						Header wwwAuthHeader = httpResponse.getFirstHeader(org.apache.http.HttpHeaders.WWW_AUTHENTICATE);
-						if (null != wwwAuthHeader)
-						{
-							// let the authentication provider execute any authentication steps needed
-							if (authenticationProvider.doAuthentication())
-							{
-								// retry the request but do not allow authentication again if it fails a
-								// second time
-								return executeRequest(httpClient, restRequest, false);
-							}
-						}
-					}
-				}
 				
 				// holds the byte array of the response data from the webservice call
 				byte[] data = null;

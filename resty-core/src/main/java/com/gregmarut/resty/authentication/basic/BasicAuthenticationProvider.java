@@ -1,12 +1,12 @@
-package com.gregmarut.resty.client.authentication.basic;
+package com.gregmarut.resty.authentication.basic;
 
 import com.gregmarut.resty.authentication.AuthenticationProvider;
 import com.gregmarut.resty.http.request.RestRequest;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.http.HttpHeaders;
+import sun.misc.BASE64Encoder;
 
 public class BasicAuthenticationProvider implements AuthenticationProvider
 {
+	public static final String AUTHORIZATION = "Authorization";
 	public static final String BASIC = "Basic";
 	
 	private final String basicAuth;
@@ -14,13 +14,13 @@ public class BasicAuthenticationProvider implements AuthenticationProvider
 	public BasicAuthenticationProvider(final String username, final String password)
 	{
 		String userpass = username + ":" + password;
-		this.basicAuth = BASIC + " " + new String(new Base64().encode(userpass.getBytes()));
+		this.basicAuth = BASIC + " " + new BASE64Encoder().encode(userpass.getBytes());
 	}
 	
 	public void preRequest(final RestRequest request)
 	{
 		// set the authorization header
-		request.setHeader(HttpHeaders.AUTHORIZATION, basicAuth);
+		request.setHeader(AUTHORIZATION, basicAuth);
 	}
 	
 	@Override

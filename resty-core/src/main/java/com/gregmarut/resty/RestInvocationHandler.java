@@ -125,7 +125,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 		setHeadersAndParameters(method, request, parameterMapper);
 		
 		// execute the request
-		RestResponse response = executeRequest(request);
+		RestResponse response = executeRequest(request, true);
 		
 		// determine the expected return type
 		Class<?> expectedReturnType = method.getReturnType();
@@ -267,6 +267,46 @@ public abstract class RestInvocationHandler implements InvocationHandler
 				}
 			}
 		}
+	}
+	
+	private RestResponse executeRequest(final RestRequest request, final boolean allowAuthenticationAttempt) throws WebServiceException
+	{
+		// check to see if there is an authentication provider
+		if (null != authenticationProvider)
+		{
+			// notify the authentication provider of the request before it is executed
+			authenticationProvider.preRequest(request);
+		}
+		
+		//execute the request to the server
+		RestResponse restResponse = executeRequest(request);
+		
+		// retrieve the http entity and status code
+		final int statusCode = restResponse.getStatusCode();
+		
+		// check to see if there is an authentication provider and if response is an
+		// unauthorized
+		if (null != authenticationProvider && HTTP_UNAUTHORIZED == statusCode)
+		{
+			// check to see if authentication is allowed
+			if (allowAuthenticationAttempt)
+			{
+				// check to see if there is a www-authenticate header
+				String wwwAuthHeader = restResponse.getHeaders().get(WWW_AUTHENTICATE);
+				if (null != wwwAuthHeader)
+				{
+					// let the authentication provider execute any authentication steps needed
+					if (authenticationProvider.doAuthentication())
+					{
+						// retry the request but do not allow authentication again if it fails a
+						// second time
+						return executeRequest(request, false);
+					}
+				}
+			}
+		}
+		
+		return restResponse;
 	}
 	
 	/**
