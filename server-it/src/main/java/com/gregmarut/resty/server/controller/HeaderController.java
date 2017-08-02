@@ -6,12 +6,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletResponse;
+
 @RestController
 @RequestMapping("/header")
 public class HeaderController
 {
 	@RequestMapping(value = "/verify", method = RequestMethod.GET)
-	public void verifyHeader(@RequestHeader(value = "token", required = false) final String token)
+	public void verifyHeader(@RequestHeader(value = "token", required = false) final String token, final HttpServletResponse response)
 	{
 		if (null == token)
 		{

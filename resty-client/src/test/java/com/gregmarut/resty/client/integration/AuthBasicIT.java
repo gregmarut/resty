@@ -3,7 +3,7 @@ package com.gregmarut.resty.client.integration;
 import com.gregmarut.resty.bean.ErrorBean;
 import com.gregmarut.resty.bean.UserBean;
 import com.gregmarut.resty.client.HttpRestProxyFactory;
-import com.gregmarut.resty.client.authentication.AuthenticationProvider;
+import com.gregmarut.resty.authentication.AuthenticationProvider;
 import com.gregmarut.resty.client.authentication.basic.BasicAuthenticationProvider;
 import com.gregmarut.resty.exception.WebServiceException;
 import com.gregmarut.resty.http.HostDetails;

@@ -3,14 +3,16 @@ package com.gregmarut.resty.client;
 import com.gregmarut.resty.DefaultStatusCodeHandler;
 import com.gregmarut.resty.JSONInvocationHandler;
 import com.gregmarut.resty.StatusCodeHandler;
-import com.gregmarut.resty.client.authentication.AuthenticationProvider;
+import com.gregmarut.resty.authentication.AuthenticationProvider;
 import com.gregmarut.resty.exception.UnexpectedResponseEntityException;
 import com.gregmarut.resty.exception.WebServiceException;
 import com.gregmarut.resty.http.request.RestRequest;
 import com.gregmarut.resty.http.response.RestResponse;
+import com.gregmarut.resty.http.response.RestResponseBuilder;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -24,13 +26,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Map;
 
-public class HttpInvocationHandler extends JSONInvocationHandler
+public class HttpInvocationHandler extends JSONInvocationHandler<HttpClient>
 {
 	// holds the http client factory
 	protected final HttpClientFactory httpClientFactory;
-	
-	// holds the authentication provider
-	private AuthenticationProvider authenticationProvider;
 	
 	public HttpInvocationHandler(final HttpClientFactory httpClientFactory, final String rootURL)
 	{
@@ -55,10 +54,7 @@ public class HttpInvocationHandler extends JSONInvocationHandler
 	{
 		try (CloseableHttpClient httpClient = httpClientFactory.createHttpClient())
 		{
-			//convert the rest request to an http uri request
-			HttpUriRequest request = toHttpUriRequest(restRequest);
-			
-			return executeRequest(httpClient, request, true);
+			return executeRequest(httpClient, restRequest, true);
 		}
 		catch (IOException e)
 		{
@@ -70,23 +66,28 @@ public class HttpInvocationHandler extends JSONInvocationHandler
 	 * Executes the request on the http client
 	 *
 	 * @param httpClient
-	 * @param request
+	 * @param restRequest
 	 * @param allowAuthenticationAttempt if the request fails due to a 401 status code, this determines whether or not the authentication provider is
 	 *                                   allowed to attempt authentication and retry the request
 	 * @return
 	 * @throws WebServiceException
 	 */
-	protected RestResponse executeRequest(final CloseableHttpClient httpClient, HttpUriRequest request, final boolean allowAuthenticationAttempt)
-		throws WebServiceException
+	protected RestResponse executeRequest(final CloseableHttpClient httpClient, final RestRequest restRequest,
+		final boolean allowAuthenticationAttempt) throws WebServiceException
 	{
 		try
 		{
+			final AuthenticationProvider<HttpClient> authenticationProvider = getAuthenticationProvider();
+			
 			// check to see if there is an authentication provider
 			if (null != authenticationProvider)
 			{
 				// notify the authentication provider of the request before it is executed
-				authenticationProvider.preRequest(request);
+				authenticationProvider.preRequest(restRequest);
 			}
+			
+			//convert the rest request to an http uri request
+			HttpUriRequest request = toHttpUriRequest(restRequest);
 			
 			// execute the call
 			try (CloseableHttpResponse httpResponse = httpClient.execute(request))
@@ -111,7 +112,7 @@ public class HttpInvocationHandler extends JSONInvocationHandler
 							{
 								// retry the request but do not allow authentication again if it fails a
 								// second time
-								return executeRequest(httpClient, request, false);
+								return executeRequest(httpClient, restRequest, false);
 							}
 						}
 					}
@@ -139,7 +140,20 @@ public class HttpInvocationHandler extends JSONInvocationHandler
 					}
 				}
 				
-				return new RestResponse(statusCode, data);
+				//create a new response builder
+				RestResponseBuilder restResponseBuilder = RestResponseBuilder.create().setData(data).setStatusCode(statusCode);
+				
+				//make sure the headers are not null
+				if (null != httpResponse.getAllHeaders())
+				{
+					//for each of the headers
+					for (Header header : httpResponse.getAllHeaders())
+					{
+						restResponseBuilder.setHeader(header.getName(), header.getValue());
+					}
+				}
+				
+				return restResponseBuilder.build();
 			}
 		}
 		catch (IOException e)
@@ -189,16 +203,6 @@ public class HttpInvocationHandler extends JSONInvocationHandler
 		}
 		
 		return httpUriRequest;
-	}
-	
-	public void setAuthenticationProvider(final AuthenticationProvider authenticationProvider)
-	{
-		this.authenticationProvider = authenticationProvider;
-	}
-	
-	public AuthenticationProvider getAuthenticationProvider()
-	{
-		return authenticationProvider;
 	}
 	
 	public HttpClientFactory getHttpClientFactory()

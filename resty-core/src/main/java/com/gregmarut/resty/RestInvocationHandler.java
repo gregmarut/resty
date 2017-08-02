@@ -13,6 +13,7 @@ import com.gregmarut.resty.annotation.HttpParameters;
 import com.gregmarut.resty.annotation.NameValue;
 import com.gregmarut.resty.annotation.Parameter;
 import com.gregmarut.resty.annotation.RestMethod;
+import com.gregmarut.resty.authentication.AuthenticationProvider;
 import com.gregmarut.resty.exception.InvalidMethodTypeException;
 import com.gregmarut.resty.exception.InvalidVariablePathException;
 import com.gregmarut.resty.exception.MissingAnnotationException;
@@ -42,9 +43,12 @@ import java.util.regex.Pattern;
  *
  * @author Greg Marut
  */
-public abstract class RestInvocationHandler implements InvocationHandler
+public abstract class RestInvocationHandler<C> implements InvocationHandler
 {
 	private static final Logger logger = LoggerFactory.getLogger(RestInvocationHandler.class);
+	
+	public static final int HTTP_UNAUTHORIZED = 401;
+	public static final String WWW_AUTHENTICATE = "WWW-Authenticate";
 	
 	public static final String REGEX_VAR = "\\{([a-zA-Z0-9\\.]+?)\\}";
 	public static final String REGEX_DOMAIN_URL = "^[a-zA-Z]+://([a-zA-Z0-9\\.\\-]+)";
@@ -58,6 +62,9 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	
 	// holds the status code handler
 	protected final StatusCodeHandler statusCodeHandler;
+	
+	// holds the authentication provider
+	private AuthenticationProvider<C> authenticationProvider;
 	
 	// determines which class to use to hold the error entities
 	private Class<?> errorClass;
@@ -278,10 +285,10 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	 * @param expectedReturnType
 	 * @return
 	 * @throws StatusCodeException
-	 * @throws UnexpectedResponseEntityException
+	 * @throws WebServiceException
 	 */
 	protected Object handleResponse(final RestResponse restResponse, final Class<?> expectedReturnType,
-		final Expected expected) throws WebServiceException, UnexpectedResponseEntityException
+		final Expected expected) throws WebServiceException
 	{
 		Object result;
 		Object errorResult = null;
@@ -494,5 +501,15 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	public void setErrorClass(Class<?> errorClass)
 	{
 		this.errorClass = errorClass;
+	}
+	
+	public AuthenticationProvider<C> getAuthenticationProvider()
+	{
+		return authenticationProvider;
+	}
+	
+	public void setAuthenticationProvider(final AuthenticationProvider<C> authenticationProvider)
+	{
+		this.authenticationProvider = authenticationProvider;
 	}
 }

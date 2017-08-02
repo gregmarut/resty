@@ -3,6 +3,7 @@ package com.gregmarut.resty;
 import com.gregmarut.resty.exception.WebServiceException;
 import com.gregmarut.resty.http.request.RestRequest;
 import com.gregmarut.resty.http.response.RestResponse;
+import com.gregmarut.resty.http.response.RestResponseBuilder;
 import com.gregmarut.resty.serialization.GsonSerializer;
 import org.apache.commons.io.IOUtils;
 
@@ -11,9 +12,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
+import java.util.List;
 import java.util.Map;
 
-public class URLInvocationHandler extends JSONInvocationHandler
+public class URLInvocationHandler extends JSONInvocationHandler<URLConnection>
 {
 	public URLInvocationHandler(final String rootURL)
 	{
@@ -42,8 +45,23 @@ public class URLInvocationHandler extends JSONInvocationHandler
 			final int responseCode = httpURLConnection.getResponseCode();
 			final byte[] data = IOUtils.toByteArray(readStream(httpURLConnection, responseCode));
 			
-			//create a new rest response
-			return new RestResponse(responseCode, data);
+			//create a new response builder
+			RestResponseBuilder restResponseBuilder = RestResponseBuilder.create().setData(data).setStatusCode(responseCode);
+			
+			//for each of the headers
+			for (Map.Entry<String, List<String>> header : httpURLConnection.getHeaderFields().entrySet())
+			{
+				//make sure the key is not null
+				if(null != header.getKey())
+				{
+					//:FIXME: only supporting the first value in the header list?
+					String value = (null != header.getValue() && !header.getValue().isEmpty()) ? header.getValue().get(0) : null;
+					
+					restResponseBuilder.setHeader(header.getKey(), value);
+				}
+			}
+			
+			return restResponseBuilder.build();
 		}
 		catch (IOException e)
 		{

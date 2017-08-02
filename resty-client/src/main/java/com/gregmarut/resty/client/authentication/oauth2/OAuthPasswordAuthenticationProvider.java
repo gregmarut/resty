@@ -1,13 +1,12 @@
 package com.gregmarut.resty.client.authentication.oauth2;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
-
-import com.gregmarut.resty.client.authentication.AuthenticationProvider;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
+import com.gregmarut.resty.authentication.AuthenticationProvider;
 import com.gregmarut.resty.client.authentication.basic.BasicAuthenticationProvider;
+import com.gregmarut.resty.http.request.RestRequest;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
@@ -16,17 +15,17 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
-public class OAuthPasswordAuthenticationProvider implements AuthenticationProvider
+public class OAuthPasswordAuthenticationProvider implements AuthenticationProvider<HttpClient>
 {
 	private static final Logger logger = LoggerFactory.getLogger(OAuthPasswordAuthenticationProvider.class);
 	
@@ -65,7 +64,7 @@ public class OAuthPasswordAuthenticationProvider implements AuthenticationProvid
 	}
 	
 	@Override
-	public void preRequest(final HttpUriRequest request)
+	public void preRequest(final RestRequest request)
 	{
 		// make sure the token is not null
 		if (null != oauthResponse)
