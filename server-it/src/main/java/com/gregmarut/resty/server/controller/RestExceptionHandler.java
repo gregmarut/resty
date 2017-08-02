@@ -1,6 +1,7 @@
 package com.gregmarut.resty.server.controller;
 
 import com.gregmarut.resty.bean.ErrorBean;
+import com.gregmarut.resty.server.exception.BadRequestException;
 import com.gregmarut.resty.server.exception.ServerException;
 import com.gregmarut.resty.server.exception.UserException;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,18 @@ public class RestExceptionHandler
 	@ResponseStatus(value = HttpStatus.BAD_REQUEST)
 	@ResponseBody
 	public ErrorBean handleException(final UserException e)
+	{
+		ErrorBean errorBean = new ErrorBean();
+		errorBean.setStatus(HttpStatus.BAD_REQUEST.value());
+		errorBean.setMessage(e.getMessage());
+		
+		return errorBean;
+	}
+	
+	@ExceptionHandler(BadRequestException.class)
+	@ResponseStatus(value = HttpStatus.BAD_REQUEST)
+	@ResponseBody
+	public ErrorBean handleException(final BadRequestException e)
 	{
 		ErrorBean errorBean = new ErrorBean();
 		errorBean.setStatus(HttpStatus.BAD_REQUEST.value());
