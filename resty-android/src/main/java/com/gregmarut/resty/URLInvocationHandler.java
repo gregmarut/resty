@@ -10,6 +10,9 @@ import org.apache.commons.io.IOUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.CookieHandler;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
@@ -20,17 +23,20 @@ public class URLInvocationHandler extends JSONInvocationHandler
 	public URLInvocationHandler(final String rootURL)
 	{
 		super(rootURL);
+		CookieHandler.setDefault(new CookieManager(null, CookiePolicy.ACCEPT_ALL));
 	}
 	
 	public URLInvocationHandler(final String rootURL, final StatusCodeHandler statusCodeHandler)
 	{
 		super(rootURL, statusCodeHandler);
+		CookieHandler.setDefault(new CookieManager(null, CookiePolicy.ACCEPT_ALL));
 	}
 	
 	public URLInvocationHandler(final String rootURL, final StatusCodeHandler statusCodeHandler,
 		final GsonSerializer serializer)
 	{
 		super(rootURL, statusCodeHandler, serializer);
+		CookieHandler.setDefault(new CookieManager(null, CookiePolicy.ACCEPT_ALL));
 	}
 	
 	@Override
@@ -51,7 +57,7 @@ public class URLInvocationHandler extends JSONInvocationHandler
 			for (Map.Entry<String, List<String>> header : httpURLConnection.getHeaderFields().entrySet())
 			{
 				//make sure the key is not null
-				if(null != header.getKey())
+				if (null != header.getKey())
 				{
 					//:FIXME: only supporting the first value in the header list?
 					String value = (null != header.getValue() && !header.getValue().isEmpty()) ? header.getValue().get(0) : null;
