@@ -50,6 +50,7 @@
 
 		<version.gson>2.2.2</version.gson>
 		<version.commonsio>2.5</version.commonsio>
+		<version.commonscodec>1.10</version.commonscodec>
 		<version.apachehttp>4.5.2</version.apachehttp>
 
 		<!-- Test Dependency Versions -->

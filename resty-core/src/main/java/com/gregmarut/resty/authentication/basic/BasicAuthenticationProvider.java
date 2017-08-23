@@ -2,7 +2,7 @@ package com.gregmarut.resty.authentication.basic;
 
 import com.gregmarut.resty.authentication.AuthenticationProvider;
 import com.gregmarut.resty.http.request.RestRequest;
-import sun.misc.BASE64Encoder;
+import org.apache.commons.codec.binary.Base64;
 
 public class BasicAuthenticationProvider implements AuthenticationProvider
 {
@@ -14,7 +14,7 @@ public class BasicAuthenticationProvider implements AuthenticationProvider
 	public BasicAuthenticationProvider(final String username, final String password)
 	{
 		String userpass = username + ":" + password;
-		this.basicAuth = BASIC + " " + new BASE64Encoder().encode(userpass.getBytes());
+		this.basicAuth = BASIC + " " + new Base64().encodeAsString(userpass.getBytes());
 	}
 	
 	public void preRequest(final RestRequest request)
