@@ -1,5 +1,6 @@
 package com.gregmarut.resty.authentication.oauth2;
 
+import com.gregmarut.resty.RestRequestExecutor;
 import com.gregmarut.resty.authentication.AuthenticationProvider;
 import com.gregmarut.resty.http.request.RestRequest;
 
@@ -29,7 +30,7 @@ public class OAuthTokenAuthenticationProvider implements AuthenticationProvider
 	}
 	
 	@Override
-	public boolean doAuthentication()
+	public boolean doAuthentication(final RestRequestExecutor restRequestExecutor)
 	{
 		// if it didnt work the first time, its not going to work now. There is nothing special is
 		// needed for basic auth

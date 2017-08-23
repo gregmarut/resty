@@ -79,6 +79,21 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	public RestInvocationHandler(final String rootURL, final RestRequestExecutor restRequestExecutor,
 		final StatusCodeHandler statusCodeHandler)
 	{
+		if (null == rootURL)
+		{
+			throw new IllegalArgumentException("rootURL cannot be null");
+		}
+		
+		if (null == restRequestExecutor)
+		{
+			throw new IllegalArgumentException("restRequestExecutor cannot be null");
+		}
+		
+		if (null == statusCodeHandler)
+		{
+			throw new IllegalArgumentException("statusCodeHandler cannot be null");
+		}
+		
 		this.rootURL = rootURL;
 		this.restRequestExecutor = restRequestExecutor;
 		this.statusCodeHandler = statusCodeHandler;
@@ -300,7 +315,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 				if (null != wwwAuthHeader)
 				{
 					// let the authentication provider execute any authentication steps needed
-					if (authenticationProvider.doAuthentication())
+					if (authenticationProvider.doAuthentication(restRequestExecutor))
 					{
 						// retry the request but do not allow authentication again if it fails a
 						// second time

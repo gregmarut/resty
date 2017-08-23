@@ -1,5 +1,6 @@
 package com.gregmarut.resty.authentication;
 
+import com.gregmarut.resty.RestRequestExecutor;
 import com.gregmarut.resty.http.request.RestRequest;
 
 public interface AuthenticationProvider
@@ -17,5 +18,5 @@ public interface AuthenticationProvider
 	 *
 	 * @return whether or not the authentication was successful
 	 */
-	boolean doAuthentication();
+	boolean doAuthentication(RestRequestExecutor restRequestExecutor);
 }

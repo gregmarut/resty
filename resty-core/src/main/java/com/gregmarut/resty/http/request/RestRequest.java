@@ -2,6 +2,8 @@ package com.gregmarut.resty.http.request;
 
 import com.gregmarut.resty.MethodType;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,5 +61,29 @@ public class RestRequest
 	public void setData(final byte[] data)
 	{
 		this.data = data;
+	}
+	
+	public void setFormEncodedData(final Map<String, String> parameters, final String encoding) throws UnsupportedEncodingException
+	{
+		StringBuilder sb = new StringBuilder();
+		
+		//for each of the parameters
+		for (Map.Entry<String, String> param : parameters.entrySet())
+		{
+			if (sb.length() > 0)
+			{
+				sb.append("&");
+			}
+			
+			//encode the key and value
+			String key = URLEncoder.encode(param.getKey(), encoding);
+			String value = URLEncoder.encode(param.getValue(), encoding);
+			
+			sb.append(key);
+			sb.append("=");
+			sb.append(value);
+		}
+		
+		setData(sb.toString().getBytes());
 	}
 }
