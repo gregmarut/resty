@@ -1,5 +1,7 @@
-package com.gregmarut.resty;
+package com.gregmarut.resty.android;
 
+import com.gregmarut.resty.JSONInvocationHandler;
+import com.gregmarut.resty.StatusCodeHandler;
 import com.gregmarut.resty.exception.WebServiceException;
 import com.gregmarut.resty.http.request.RestRequest;
 import com.gregmarut.resty.http.response.RestResponse;

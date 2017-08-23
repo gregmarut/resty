@@ -1,6 +1,6 @@
 package com.gregmarut.resty.client.integration;
 
-import com.gregmarut.resty.URLRestProxyFactory;
+import com.gregmarut.resty.android.URLRestProxyFactory;
 import com.gregmarut.resty.exception.WebServiceException;
 import com.gregmarut.resty.http.HostDetails;
 import com.gregmarut.resty.http.Scheme;

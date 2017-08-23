@@ -1,11 +1,11 @@
-package com.gregmarut.resty.client.authentication.oauth2;
+package com.gregmarut.resty.authentication.oauth2;
 
 import com.gregmarut.resty.authentication.AuthenticationProvider;
 import com.gregmarut.resty.http.request.RestRequest;
-import org.apache.http.HttpHeaders;
 
 public class OAuthTokenAuthenticationProvider implements AuthenticationProvider
 {
+	public static final String AUTHORIZATION = "Authorization";
 	public static final String BEARER = "Bearer";
 	
 	private final String bearerAuth;
@@ -25,7 +25,7 @@ public class OAuthTokenAuthenticationProvider implements AuthenticationProvider
 	public void preRequest(final RestRequest request)
 	{
 		// set the authorization header
-		request.setHeader(HttpHeaders.AUTHORIZATION, bearerAuth);
+		request.setHeader(AUTHORIZATION, bearerAuth);
 	}
 	
 	@Override

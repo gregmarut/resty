@@ -1,5 +1,6 @@
-package com.gregmarut.resty;
+package com.gregmarut.resty.android;
 
+import com.gregmarut.resty.RestProxyFactory;
 import com.gregmarut.resty.http.HostDetails;
 
 public class URLRestProxyFactory extends RestProxyFactory<URLInvocationHandler>

@@ -1,4 +1,4 @@
-package com.gregmarut.resty.client.authentication.oauth2;
+package com.gregmarut.resty.authentication.oauth2;
 
 public class OAuthResponse
 {
