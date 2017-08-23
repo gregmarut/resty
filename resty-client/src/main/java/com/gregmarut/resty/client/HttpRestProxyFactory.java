@@ -7,10 +7,11 @@
  ******************************************************************************/
 package com.gregmarut.resty.client;
 
+import com.gregmarut.resty.JSONInvocationHandler;
 import com.gregmarut.resty.RestProxyFactory;
 import com.gregmarut.resty.http.HostDetails;
 
-public class HttpRestProxyFactory extends RestProxyFactory<HttpInvocationHandler>
+public class HttpRestProxyFactory extends RestProxyFactory<JSONInvocationHandler>
 {
 	// holds the factory that will handle new and existing clients
 	private final HttpClientFactory httpClientFactory;
@@ -22,7 +23,7 @@ public class HttpRestProxyFactory extends RestProxyFactory<HttpInvocationHandler
 	
 	public HttpRestProxyFactory(final String hostUrl, final HttpClientFactory httpClientFactory)
 	{
-		super(new HttpInvocationHandler(httpClientFactory, hostUrl));
+		super(new JSONInvocationHandler(hostUrl, new HttpRestRequestExecutor(httpClientFactory)));
 		this.httpClientFactory = httpClientFactory;
 	}
 	
@@ -33,14 +34,14 @@ public class HttpRestProxyFactory extends RestProxyFactory<HttpInvocationHandler
 	
 	public HttpRestProxyFactory(final HostDetails hostDetails, final HttpClientFactory httpClientFactory)
 	{
-		super(new HttpInvocationHandler(httpClientFactory, hostDetails.getUrl()));
+		super(new JSONInvocationHandler(hostDetails.getUrl(), new HttpRestRequestExecutor(httpClientFactory)));
 		this.httpClientFactory = httpClientFactory;
 	}
 	
-	public HttpRestProxyFactory(final HttpInvocationHandler httpInvocationHandler)
+	public HttpRestProxyFactory(final JSONInvocationHandler invocationHandler)
 	{
-		super(httpInvocationHandler);
-		this.httpClientFactory = httpInvocationHandler.getHttpClientFactory();
+		super(invocationHandler);
+		this.httpClientFactory = new HttpClientFactory();
 	}
 	
 	public void eraseCookies()

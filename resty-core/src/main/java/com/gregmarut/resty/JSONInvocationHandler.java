@@ -8,28 +8,28 @@ package com.gregmarut.resty;
 import com.gregmarut.resty.serialization.GsonSerializer;
 import com.gregmarut.resty.serialization.Serializer;
 
-public abstract class JSONInvocationHandler extends RestInvocationHandler
+public class JSONInvocationHandler extends RestInvocationHandler
 {
 	public static final String JSON_TYPE = "application/json";
 	
 	private final RestRequestFactory restRequestFactory;
 	private final GsonSerializer serializer;
 	
-	public JSONInvocationHandler(final String rootURL)
+	public JSONInvocationHandler(final String rootURL, final RestRequestExecutor restRequestExecutor)
 	{
-		this(rootURL, new DefaultStatusCodeHandler());
+		this(rootURL, restRequestExecutor, new DefaultStatusCodeHandler());
 	}
 	
-	public JSONInvocationHandler(final String rootURL,
+	public JSONInvocationHandler(final String rootURL, final RestRequestExecutor restRequestExecutor,
 		final StatusCodeHandler statusCodeHandler)
 	{
-		this(rootURL, statusCodeHandler, new GsonSerializer());
+		this(rootURL, restRequestExecutor, statusCodeHandler, new GsonSerializer());
 	}
 	
-	public JSONInvocationHandler(final String rootURL, final StatusCodeHandler statusCodeHandler,
+	public JSONInvocationHandler(final String rootURL, final RestRequestExecutor restRequestExecutor, final StatusCodeHandler statusCodeHandler,
 		final GsonSerializer serializer)
 	{
-		super(rootURL, statusCodeHandler);
+		super(rootURL, restRequestExecutor, statusCodeHandler);
 		
 		restRequestFactory = new RestRequestFactory(JSON_TYPE);
 		this.serializer = serializer;

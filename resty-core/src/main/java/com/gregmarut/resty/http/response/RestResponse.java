@@ -10,12 +10,22 @@ public class RestResponse
 	private final Map<String, String> headers;
 	private final byte[] data;
 	
+	public RestResponse(final int statusCode)
+	{
+		this(statusCode, null, null);
+	}
+	
 	public RestResponse(final int statusCode, final byte[] data, final Map<String, String> headers)
 	{
 		this.statusCode = statusCode;
 		
 		Map<String, String> h = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
-		h.putAll(headers);
+		
+		//make sure the headers are not null
+		if (null != headers)
+		{
+			h.putAll(headers);
+		}
 		
 		this.headers = Collections.unmodifiableMap(h);
 		this.data = data;

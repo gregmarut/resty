@@ -1,8 +1,6 @@
 package com.gregmarut.resty.client;
 
-import com.gregmarut.resty.DefaultStatusCodeHandler;
-import com.gregmarut.resty.JSONInvocationHandler;
-import com.gregmarut.resty.StatusCodeHandler;
+import com.gregmarut.resty.RestRequestExecutor;
 import com.gregmarut.resty.exception.UnexpectedResponseEntityException;
 import com.gregmarut.resty.exception.WebServiceException;
 import com.gregmarut.resty.http.request.RestRequest;
@@ -23,20 +21,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Map;
 
-public class HttpInvocationHandler extends JSONInvocationHandler
+public class HttpRestRequestExecutor implements RestRequestExecutor
 {
 	// holds the http client factory
 	protected final HttpClientFactory httpClientFactory;
 	
-	public HttpInvocationHandler(final HttpClientFactory httpClientFactory, final String rootURL)
+	public HttpRestRequestExecutor(final HttpClientFactory httpClientFactory)
 	{
-		this(httpClientFactory, rootURL, new DefaultStatusCodeHandler());
-	}
-	
-	public HttpInvocationHandler(final HttpClientFactory httpClientFactory, final String rootURL,
-		final StatusCodeHandler statusCodeHandler)
-	{
-		super(rootURL, statusCodeHandler);
 		this.httpClientFactory = httpClientFactory;
 	}
 	
@@ -48,7 +39,7 @@ public class HttpInvocationHandler extends JSONInvocationHandler
 	 * @throws WebServiceException
 	 */
 	@Override
-	protected RestResponse executeRequest(final RestRequest restRequest) throws WebServiceException
+	public RestResponse executeRequest(final RestRequest restRequest) throws WebServiceException
 	{
 		try (CloseableHttpClient httpClient = httpClientFactory.createHttpClient())
 		{

@@ -11,6 +11,8 @@
 package com.gregmarut.resty.client;
 
 import com.gregmarut.resty.DefaultStatusCodeHandler;
+import com.gregmarut.resty.JSONInvocationHandler;
+import com.gregmarut.resty.RestRequestExecutor;
 import com.gregmarut.resty.exception.WebServiceException;
 import com.gregmarut.resty.http.request.RestRequest;
 import com.gregmarut.resty.http.response.RestResponse;
@@ -27,7 +29,7 @@ import org.mockito.Mockito;
 public class RestInvocationHandlerTest
 {
 	private static final String ROOT = "http://www.example.com";
-	private HttpInvocationHandler httpInvocationHandler;
+	private JSONInvocationHandler invocationHandler;
 	private HttpRestProxyFactory restProxyHandler;
 	
 	private TestInterfaceProxy proxy;
@@ -59,21 +61,21 @@ public class RestInvocationHandlerTest
 	@Test
 	public void verifyURL() throws WebServiceException
 	{
-		httpInvocationHandler = new HttpInvocationHandler(
-			mockHttpClientFactory,
+		invocationHandler = new JSONInvocationHandler(
 			ROOT,
-			new DefaultStatusCodeHandler())
-		{
-			@Override
-			protected RestResponse executeRequest(RestRequest request) throws WebServiceException
+			new RestRequestExecutor()
 			{
-				//verify the url
-				Assert.assertEquals(ROOT + "/test/1/", request.getUrl());
-				return super.executeRequest(request);
-			}
-		};
+				@Override
+				public RestResponse executeRequest(final RestRequest restRequest) throws WebServiceException
+				{
+					//verify the url
+					Assert.assertEquals(ROOT + "/test/1/", restRequest.getUrl());
+					return new RestResponse(204);
+				}
+			},
+			new DefaultStatusCodeHandler());
 		
-		restProxyHandler = new HttpRestProxyFactory(httpInvocationHandler);
+		restProxyHandler = new HttpRestProxyFactory(invocationHandler);
 		proxy = restProxyHandler.createProxy(TestInterfaceProxy.class);
 		
 		proxy.id(1);
@@ -82,21 +84,21 @@ public class RestInvocationHandlerTest
 	@Test
 	public void verifyAcceptsHeader() throws WebServiceException
 	{
-		httpInvocationHandler = new HttpInvocationHandler(
-			mockHttpClientFactory,
+		invocationHandler = new JSONInvocationHandler(
 			ROOT,
-			new DefaultStatusCodeHandler())
-		{
-			@Override
-			protected RestResponse executeRequest(RestRequest request) throws WebServiceException
+			new RestRequestExecutor()
 			{
-				//verify the url
-				Assert.assertEquals(ROOT + "/test/1/", request.getUrl());
-				return super.executeRequest(request);
-			}
-		};
+				@Override
+				public RestResponse executeRequest(final RestRequest restRequest) throws WebServiceException
+				{
+					//verify the url
+					Assert.assertEquals(ROOT + "/test/1/", restRequest.getUrl());
+					return new RestResponse(204);
+				}
+			},
+			new DefaultStatusCodeHandler());
 		
-		restProxyHandler = new HttpRestProxyFactory(httpInvocationHandler);
+		restProxyHandler = new HttpRestProxyFactory(invocationHandler);
 		proxy = restProxyHandler.createProxy(TestInterfaceProxy.class);
 		
 		proxy.id(1);
@@ -105,21 +107,21 @@ public class RestInvocationHandlerTest
 	@Test
 	public void testHeaderMethod() throws WebServiceException
 	{
-		httpInvocationHandler = new HttpInvocationHandler(
-			mockHttpClientFactory,
+		invocationHandler = new JSONInvocationHandler(
 			ROOT,
-			new DefaultStatusCodeHandler())
-		{
-			@Override
-			protected RestResponse executeRequest(RestRequest request) throws WebServiceException
+			new RestRequestExecutor()
 			{
-				//verify the headers
-				Assert.assertEquals("application/json", request.getHeaders().get("Accepts"));
-				return super.executeRequest(request);
-			}
-		};
+				@Override
+				public RestResponse executeRequest(final RestRequest restRequest) throws WebServiceException
+				{
+					//verify the url
+					Assert.assertEquals("application/json", restRequest.getHeaders().get("Accepts"));
+					return new RestResponse(204);
+				}
+			},
+			new DefaultStatusCodeHandler());
 		
-		restProxyHandler = new HttpRestProxyFactory(httpInvocationHandler);
+		restProxyHandler = new HttpRestProxyFactory(invocationHandler);
 		proxy = restProxyHandler.createProxy(TestInterfaceProxy.class);
 		
 		proxy.headerMethodAccepts();
@@ -128,21 +130,21 @@ public class RestInvocationHandlerTest
 	@Test
 	public void testParameterMethod() throws WebServiceException
 	{
-		httpInvocationHandler = new HttpInvocationHandler(
-			mockHttpClientFactory,
+		invocationHandler = new JSONInvocationHandler(
 			ROOT,
-			new DefaultStatusCodeHandler())
-		{
-			@Override
-			protected RestResponse executeRequest(RestRequest request) throws WebServiceException
+			new RestRequestExecutor()
 			{
-				//verify the parameters
-				Assert.assertEquals("some value", request.getParameters().get("something"));
-				return super.executeRequest(request);
-			}
-		};
+				@Override
+				public RestResponse executeRequest(final RestRequest restRequest) throws WebServiceException
+				{
+					//verify the url
+					Assert.assertEquals("some value", restRequest.getParameters().get("something"));
+					return new RestResponse(204);
+				}
+			},
+			new DefaultStatusCodeHandler());
 		
-		restProxyHandler = new HttpRestProxyFactory(httpInvocationHandler);
+		restProxyHandler = new HttpRestProxyFactory(invocationHandler);
 		proxy = restProxyHandler.createProxy(TestInterfaceProxy.class);
 		
 		proxy.parameterMethodAccepts();

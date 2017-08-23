@@ -1,12 +1,10 @@
 package com.gregmarut.resty.android;
 
-import com.gregmarut.resty.JSONInvocationHandler;
-import com.gregmarut.resty.StatusCodeHandler;
+import com.gregmarut.resty.RestRequestExecutor;
 import com.gregmarut.resty.exception.WebServiceException;
 import com.gregmarut.resty.http.request.RestRequest;
 import com.gregmarut.resty.http.response.RestResponse;
 import com.gregmarut.resty.http.response.RestResponseBuilder;
-import com.gregmarut.resty.serialization.GsonSerializer;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
@@ -20,29 +18,20 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
-public class URLInvocationHandler extends JSONInvocationHandler
+public class URLRestRequestExecutor implements RestRequestExecutor
 {
-	public URLInvocationHandler(final String rootURL)
+	public URLRestRequestExecutor()
 	{
-		super(rootURL);
-		CookieHandler.setDefault(new CookieManager(null, CookiePolicy.ACCEPT_ALL));
-	}
-	
-	public URLInvocationHandler(final String rootURL, final StatusCodeHandler statusCodeHandler)
-	{
-		super(rootURL, statusCodeHandler);
-		CookieHandler.setDefault(new CookieManager(null, CookiePolicy.ACCEPT_ALL));
-	}
-	
-	public URLInvocationHandler(final String rootURL, final StatusCodeHandler statusCodeHandler,
-		final GsonSerializer serializer)
-	{
-		super(rootURL, statusCodeHandler, serializer);
-		CookieHandler.setDefault(new CookieManager(null, CookiePolicy.ACCEPT_ALL));
+		//check to see if the cookie handler has a default
+		if (null == CookieHandler.getDefault())
+		{
+			//set the cookie manager
+			CookieHandler.setDefault(new CookieManager(null, CookiePolicy.ACCEPT_ALL));
+		}
 	}
 	
 	@Override
-	protected RestResponse executeRequest(final RestRequest request) throws WebServiceException
+	public RestResponse executeRequest(final RestRequest request) throws WebServiceException
 	{
 		try
 		{

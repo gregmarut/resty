@@ -53,6 +53,8 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	public static final String REGEX_VAR = "\\{([a-zA-Z0-9\\.]+?)\\}";
 	public static final String REGEX_DOMAIN_URL = "^[a-zA-Z]+://([a-zA-Z0-9\\.\\-]+)";
 	
+	private final RestRequestExecutor restRequestExecutor;
+	
 	// holds the pattern object for capturing uri variables
 	private final Pattern varPattern;
 	private final Pattern domainPattern;
@@ -69,14 +71,16 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	// determines which class to use to hold the error entities
 	private Class<?> errorClass;
 	
-	public RestInvocationHandler(final String rootURL)
+	public RestInvocationHandler(final String rootURL, final RestRequestExecutor restRequestExecutor)
 	{
-		this(rootURL, new DefaultStatusCodeHandler());
+		this(rootURL, restRequestExecutor, new DefaultStatusCodeHandler());
 	}
 	
-	public RestInvocationHandler(final String rootURL, final StatusCodeHandler statusCodeHandler)
+	public RestInvocationHandler(final String rootURL, final RestRequestExecutor restRequestExecutor,
+		final StatusCodeHandler statusCodeHandler)
 	{
 		this.rootURL = rootURL;
+		this.restRequestExecutor = restRequestExecutor;
 		this.statusCodeHandler = statusCodeHandler;
 		
 		varPattern = Pattern.compile(REGEX_VAR);
@@ -279,7 +283,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 		}
 		
 		//execute the request to the server
-		RestResponse restResponse = executeRequest(request);
+		RestResponse restResponse = restRequestExecutor.executeRequest(request);
 		
 		// retrieve the http entity and status code
 		final int statusCode = restResponse.getStatusCode();
@@ -308,15 +312,6 @@ public abstract class RestInvocationHandler implements InvocationHandler
 		
 		return restResponse;
 	}
-	
-	/**
-	 * Executes the request
-	 *
-	 * @param request
-	 * @return
-	 * @throws WebServiceException
-	 */
-	protected abstract RestResponse executeRequest(final RestRequest request) throws WebServiceException;
 	
 	/**
 	 * Handles the response that is returned from the http client
