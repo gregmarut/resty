@@ -4,7 +4,7 @@
  * are made available under the terms of the GNU Public License v3.0
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/gpl.html
- * 
+ *
  * Contributors:
  *    Greg Marut - initial API and implementation
  ******************************************************************************/
@@ -21,9 +21,21 @@ public class WebServiceException extends Exception
 		super(message);
 	}
 	
+	public WebServiceException(final String message, Object errorEntity)
+	{
+		super(message);
+		setErrorEntity(errorEntity);
+	}
+	
 	public WebServiceException(final Exception cause)
 	{
 		super(cause);
+	}
+	
+	public WebServiceException(final Exception cause, Object errorEntity)
+	{
+		super(cause);
+		setErrorEntity(errorEntity);
 	}
 	
 	/**
@@ -35,8 +47,7 @@ public class WebServiceException extends Exception
 	}
 	
 	/**
-	 * @param error
-	 * the error entity to set
+	 * @param errorEntity the error entity to set
 	 */
 	public void setErrorEntity(Object errorEntity)
 	{
