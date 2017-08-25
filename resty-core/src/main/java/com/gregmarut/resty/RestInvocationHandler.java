@@ -562,4 +562,9 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	{
 		this.authenticationProvider = authenticationProvider;
 	}
+	
+	public RestRequestExecutor getRestRequestExecutor()
+	{
+		return restRequestExecutor;
+	}
 }
