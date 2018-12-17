@@ -20,8 +20,19 @@ import java.util.Map;
 
 public class URLRestRequestExecutor implements RestRequestExecutor
 {
+	public static final int DEFAULT_TIMEOUT = 5000;
+	
+	private final int timeout;
+	
 	public URLRestRequestExecutor()
 	{
+		this(DEFAULT_TIMEOUT);
+	}
+	
+	public URLRestRequestExecutor(final int timeout)
+	{
+		this.timeout = timeout;
+		
 		//check to see if the cookie handler has a default
 		if (null == CookieHandler.getDefault())
 		{
@@ -93,6 +104,8 @@ public class URLRestRequestExecutor implements RestRequestExecutor
 		//open a new url connection
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 		connection.setRequestMethod(request.getMethodType().toString());
+		connection.setConnectTimeout(timeout);
+		connection.setReadTimeout(timeout);
 		
 		//for each of the headers
 		for (Map.Entry<String, String> header : request.getHeaders().entrySet())
