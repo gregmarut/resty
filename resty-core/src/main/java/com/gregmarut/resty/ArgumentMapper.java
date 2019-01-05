@@ -4,13 +4,14 @@
  * are made available under the terms of the GNU Public License v3.0
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/gpl.html
- * 
+ *
  * Contributors:
  *    Greg Marut - initial API and implementation
  ******************************************************************************/
 package com.gregmarut.resty;
 
 import com.gregmarut.resty.annotation.Body;
+import com.gregmarut.resty.annotation.Header;
 import com.gregmarut.resty.annotation.Parameter;
 import com.gregmarut.resty.exception.ConflictingAnnotationException;
 import com.gregmarut.resty.exception.DuplicateParameterNameException;
@@ -25,19 +26,21 @@ import java.util.Map;
 
 /**
  * Responsible for the mapping of arguments to their name
- * 
+ *
  * @author Greg Marut
  */
-public class ParameterMapper
+public class ArgumentMapper
 {
 	// holds the map of body and parameter arguments
 	private final Map<String, Object> bodyArguments;
 	private final Map<String, Object> parameterArguments;
+	private final Map<String, Object> headerArguments;
 	
-	public ParameterMapper(final Method method, final Object[] args)
+	public ArgumentMapper(final Method method, final Object[] args)
 	{
 		bodyArguments = new HashMap<String, Object>();
 		parameterArguments = new HashMap<String, Object>();
+		headerArguments = new HashMap<String, Object>();
 		
 		// map the parameters
 		mapParameters(method, args);
@@ -56,6 +59,7 @@ public class ParameterMapper
 			{
 				Body b = null;
 				Parameter p = null;
+				Header h = null;
 				
 				for (int n = 0; n < parameterAnnotations[i].length; n++)
 				{
@@ -70,18 +74,35 @@ public class ParameterMapper
 					{
 						p = (Parameter) parameterAnnotations[i][n];
 					}
+					
+					// check to see if this annotation is a header
+					else if (parameterAnnotations[i][n].annotationType().equals(Header.class))
+					{
+						h = (Header) parameterAnnotations[i][n];
+					}
 				}
 				
 				// check to see if both the parameter and body annotations were set
 				if (null != b && null != p)
 				{
 					throw new ConflictingAnnotationException("A parameter is annotated with both "
-						+ Body.class.getName()
-						+ " and " + Parameter.class.getName() + ". Only 1 is allowed.");
+						+ Body.class.getName() + " and " + Parameter.class.getName() + ". Only 1 is allowed.");
+				}
+				// check to see if both the header and body annotations were set
+				else if (null != b && null != h)
+				{
+					throw new ConflictingAnnotationException("A parameter is annotated with both "
+						+ Body.class.getName() + " and " + Header.class.getName() + ". Only 1 is allowed.");
+				}
+				// check to see if both the parameter and header annotations were set
+				else if (null != p && null != h)
+				{
+					throw new ConflictingAnnotationException("A parameter is annotated with both "
+						+ Parameter.class.getName() + " and " + Header.class.getName() + ". Only 1 is allowed.");
 				}
 				
 				// check to see if both body and parameter annotations are null
-				else if (null == b && null == p)
+				else if (null == b && null == p && null == h)
 				{
 					// treat parameters without an annotation as an body
 					addToMap(bodyArguments, args[i].toString(), args[i]);
@@ -97,6 +118,12 @@ public class ParameterMapper
 				else if (null != p)
 				{
 					addToMap(parameterArguments, p.value(), args[i]);
+				}
+				
+				// only header is set
+				else if (null != h)
+				{
+					addToMap(headerArguments, h.value(), args[i]);
 				}
 			}
 			
@@ -124,21 +151,18 @@ public class ParameterMapper
 		}
 	}
 	
-	public Object getArgument(final String name)
+	public Object getArgument(final String name, final ArgumentType argumentType)
 	{
-		// check to see if the body contains it
-		if (bodyArguments.containsKey(name))
+		switch (argumentType)
 		{
-			return bodyArguments.get(name);
-		}
-		else if (parameterArguments.containsKey(name))
-		{
-			return parameterArguments.get(name);
-		}
-		else
-		{
-			throw new ParameterNotFoundException("Parameter with the name \"" + name
-				+ "\" was not found. Perhaps it is missing an annotation?");
+			case BODY:
+				return getBodyArgument(name);
+			case HEADER:
+				return getHeaderArgument(name);
+			case PARAMETER:
+				return getParameterArgument(name);
+			default:
+				throw new IllegalArgumentException("argumentType is not valid");
 		}
 	}
 	
@@ -176,6 +200,19 @@ public class ParameterMapper
 		if (parameterArguments.containsKey(name))
 		{
 			return parameterArguments.get(name);
+		}
+		else
+		{
+			throw new ParameterNotFoundException("Parameter with the name \"" + name
+				+ "\" was not found. Perhaps it is missing an annotation?");
+		}
+	}
+	
+	public Object getHeaderArgument(final String name)
+	{
+		if (headerArguments.containsKey(name))
+		{
+			return headerArguments.get(name);
 		}
 		else
 		{

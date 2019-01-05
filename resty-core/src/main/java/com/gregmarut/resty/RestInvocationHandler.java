@@ -131,17 +131,17 @@ public abstract class RestInvocationHandler implements InvocationHandler
 				+ RestMethod.class.getName());
 		}
 		
-		// create a new parameter mapper
-		ParameterMapper parameterMapper = new ParameterMapper(method, args);
+		// create a new argument mapper
+		ArgumentMapper argumentMapper = new ArgumentMapper(method, args);
 		
 		// build the uri
-		String url = buildURL(parameterMapper, restMethod, args);
+		String url = buildURL(argumentMapper, restMethod, args);
 		
 		// create the request
-		RestRequest request = createRequest(url, parameterMapper.getBodyArgument(), restMethod.method());
+		RestRequest request = createRequest(url, argumentMapper.getBodyArgument(), restMethod.method());
 		
 		// set the headers and parameters
-		setHeadersAndParameters(method, request, parameterMapper);
+		setHeadersAndParameters(method, request, argumentMapper);
 		
 		// execute the request
 		RestResponse response = executeRequest(request, true);
@@ -237,7 +237,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	 * @param request
 	 */
 	protected void setHeadersAndParameters(final Method method, final RestRequest request,
-		final ParameterMapper parameterMapper)
+		final ArgumentMapper argumentMapper)
 	{
 		// retrieve the header and parameter annotations
 		HttpHeaders httpHeaders = method.getAnnotation(HttpHeaders.class);
@@ -259,7 +259,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 					if (null != nameValue)
 					{
 						// set the header
-						request.setHeader(nameValue.name(), replaceVariables(nameValue.value(), parameterMapper));
+						request.setHeader(nameValue.name(), replaceVariables(nameValue.value(), argumentMapper));
 					}
 				}
 			}
@@ -281,7 +281,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 					if (null != nameValue)
 					{
 						// set the parameter
-						request.setParameter(nameValue.name(), replaceVariables(nameValue.value(), parameterMapper));
+						request.setParameter(nameValue.name(), replaceVariables(nameValue.value(), argumentMapper));
 					}
 				}
 			}
@@ -454,15 +454,15 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	/**
 	 * Builds the URL based on the
 	 *
-	 * @param parameterMapper
+	 * @param argumentMapper
 	 * @param restMethod
 	 * @param args
 	 * @return
 	 */
-	private String buildURL(final ParameterMapper parameterMapper, final RestMethod restMethod, final Object[] args)
+	private String buildURL(final ArgumentMapper argumentMapper, final RestMethod restMethod, final Object[] args)
 	{
 		// replace the variables in the uri
-		String uri = replaceVariables(restMethod.uri(), parameterMapper);
+		String uri = replaceVariables(restMethod.uri(), argumentMapper);
 		
 		// check to see if the domain is already there
 		if (null != rootURL && !domainPattern.matcher(uri).find())
@@ -480,7 +480,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 		}
 	}
 	
-	private String replaceVariables(final String original, final ParameterMapper parameterMapper)
+	private String replaceVariables(final String original, final ArgumentMapper argumentMapper)
 	{
 		// create a matcher that finds any variables in the string
 		Matcher matcher = varPattern.matcher(original);
@@ -497,7 +497,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 			String varName = var.substring(1, var.length() - 1);
 			
 			// resolve the variable value
-			String value = resolveObjectVariable(parameterMapper, varName);
+			String value = resolveObjectVariable(argumentMapper, varName, ArgumentType.PARAMETER);
 			
 			// replace the variable
 			string = string.replace(var, value);
@@ -506,13 +506,13 @@ public abstract class RestInvocationHandler implements InvocationHandler
 		return string;
 	}
 	
-	private String resolveObjectVariable(final ParameterMapper parameterMapper, final String varName)
+	private String resolveObjectVariable(final ArgumentMapper argumentMapper, final String varName, final ArgumentType argumentType)
 	{
 		// tokenize the string based on the object deliminiter
 		StringTokenizer tokenizer = new StringTokenizer(varName, ".");
 		
 		// get the first parameter
-		Object next = parameterMapper.getArgument(tokenizer.nextToken());
+		Object next = argumentMapper.getArgument(tokenizer.nextToken(), argumentType);
 		
 		// while there are more tokens
 		while (tokenizer.hasMoreTokens())
