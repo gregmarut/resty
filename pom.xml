@@ -48,10 +48,10 @@
 		<maven.compiler.source>1.7</maven.compiler.source>
 		<maven.compiler.target>1.7</maven.compiler.target>
 
-		<version.gson>2.2.2</version.gson>
-		<version.commonsio>2.5</version.commonsio>
-		<version.commonscodec>1.10</version.commonscodec>
-		<version.apachehttp>4.5.2</version.apachehttp>
+		<version.gson>2.8.6</version.gson>
+		<version.commonsio>2.6</version.commonsio>
+		<version.commonscodec>1.13</version.commonscodec>
+		<version.apachehttp>4.5.10</version.apachehttp>
 
 		<!-- Test Dependency Versions -->
 		<version.spring.security>4.0.2.RELEASE</version.spring.security>
