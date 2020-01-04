@@ -48,7 +48,6 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	private static final Logger logger = LoggerFactory.getLogger(RestInvocationHandler.class);
 	
 	public static final int HTTP_UNAUTHORIZED = 401;
-	public static final String WWW_AUTHENTICATE = "WWW-Authenticate";
 	
 	public static final String REGEX_VAR = "\\{([a-zA-Z0-9\\.]+?)\\}";
 	public static final String REGEX_DOMAIN_URL = "^[a-zA-Z]+://([a-zA-Z0-9\\.\\-]+)";
@@ -310,17 +309,12 @@ public abstract class RestInvocationHandler implements InvocationHandler
 			// check to see if authentication is allowed
 			if (allowAuthenticationAttempt)
 			{
-				// check to see if there is a www-authenticate header
-				String wwwAuthHeader = restResponse.getHeaders().get(WWW_AUTHENTICATE);
-				if (null != wwwAuthHeader)
+				// let the authentication provider execute any authentication steps needed
+				if (authenticationProvider.doAuthentication(restRequestExecutor))
 				{
-					// let the authentication provider execute any authentication steps needed
-					if (authenticationProvider.doAuthentication(restRequestExecutor))
-					{
-						// retry the request but do not allow authentication again if it fails a
-						// second time
-						return executeRequest(request, false);
-					}
+					// retry the request but do not allow authentication again if it fails a
+					// second time
+					return executeRequest(request, false);
 				}
 			}
 		}
