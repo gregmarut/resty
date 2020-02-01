@@ -4,7 +4,7 @@ import com.gregmarut.resty.RestRequestExecutor;
 import com.gregmarut.resty.authentication.AuthenticationProvider;
 import com.gregmarut.resty.http.request.RestRequest;
 
-public class OAuthTokenAuthenticationProvider implements AuthenticationProvider
+public class OAuthTokenAuthenticationProvider extends AuthenticationProvider
 {
 	public static final String AUTHORIZATION = "Authorization";
 	public static final String BEARER = "Bearer";

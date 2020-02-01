@@ -47,9 +47,6 @@ public abstract class RestInvocationHandler implements InvocationHandler
 {
 	private static final Logger logger = LoggerFactory.getLogger(RestInvocationHandler.class);
 	
-	public static final int HTTP_UNAUTHORIZED = 401;
-	public static final int HTTP_FORBIDDEN = 403;
-	
 	public static final String REGEX_VAR = "\\{([a-zA-Z0-9\\.]+?)\\}";
 	public static final String REGEX_DOMAIN_URL = "^[a-zA-Z]+://([a-zA-Z0-9\\.\\-]+)";
 	
@@ -300,22 +297,16 @@ public abstract class RestInvocationHandler implements InvocationHandler
 		//execute the request to the server
 		RestResponse restResponse = restRequestExecutor.executeRequest(request);
 		
-		// retrieve the http entity and status code
-		final int statusCode = restResponse.getStatusCode();
-		
-		// check to see if there is an authentication provider and if response is an unauthorized
-		if (null != authenticationProvider && (HTTP_UNAUTHORIZED == statusCode || HTTP_FORBIDDEN == statusCode))
+		// check to see if an authentication attempt is even allowed, there is an authentication provider and if that provider thinks we should
+		// attempt toauthenticate
+		if (allowAuthenticationAttempt && null != authenticationProvider && authenticationProvider.shouldAttemptAuthentication(restResponse))
 		{
-			// check to see if authentication is allowed
-			if (allowAuthenticationAttempt)
+			// let the authentication provider execute any authentication steps needed
+			if (authenticationProvider.doAuthentication(restRequestExecutor))
 			{
-				// let the authentication provider execute any authentication steps needed
-				if (authenticationProvider.doAuthentication(restRequestExecutor))
-				{
-					// retry the request but do not allow authentication again if it fails a
-					// second time
-					return executeRequest(request, false);
-				}
+				// retry the request but do not allow authentication again if it fails a
+				// second time
+				return executeRequest(request, false);
 			}
 		}
 		

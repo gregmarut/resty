@@ -21,7 +21,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class OAuthPasswordAuthenticationProvider implements AuthenticationProvider
+public class OAuthPasswordAuthenticationProvider extends AuthenticationProvider
 {
 	private static final Logger logger = LoggerFactory.getLogger(OAuthPasswordAuthenticationProvider.class);
 	

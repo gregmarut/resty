@@ -5,7 +5,7 @@ import com.gregmarut.resty.authentication.AuthenticationProvider;
 import com.gregmarut.resty.http.request.RestRequest;
 import org.apache.commons.codec.binary.Base64;
 
-public class BasicAuthenticationProvider implements AuthenticationProvider
+public class BasicAuthenticationProvider extends AuthenticationProvider
 {
 	public static final String AUTHORIZATION = "Authorization";
 	public static final String BASIC = "Basic";
@@ -27,8 +27,7 @@ public class BasicAuthenticationProvider implements AuthenticationProvider
 	@Override
 	public boolean doAuthentication(final RestRequestExecutor restRequestExecutor)
 	{
-		// if it didnt work the first time, its not going to work now. There is nothing special is
-		// needed for basic auth
+		// if it didnt work the first time, its not going to work now. There is nothing else we can do to authenticate
 		return false;
 	}
 }
