@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -402,24 +403,20 @@ public abstract class RestInvocationHandler implements InvocationHandler
 					}
 					else if (returnType.isList())
 					{
-						try
+						result = parseResponseAsList(response,
+							returnType.getGenericReturnType().orElseGet(() -> new ReturnType(Object.class)).getActualClass());
+					}
+					else if (returnType.isArray())
+					{
+						List<?> list = parseResponseAsList(response, returnType.getActualClass());
+						Object[] array = (Object[]) Array.newInstance(returnType.getActualClass(), list.size());
+						
+						for (int i = 0; i < list.size(); i++)
 						{
-							final Class<?> genericType = returnType.getGenericReturnType()
-								.orElseGet(() -> new ReturnType(Object.class))
-								.getActualClass();
-							
-							final List<Object> results = new ArrayList<>();
-							final JsonArray jsonArray = JsonParser.parseString(new String(response)).getAsJsonArray();
-							
-							jsonArray.forEach(jsonElement -> results.add(gson.fromJson(jsonElement, genericType)));
-							
-							result = results;
+							array[i] = list.get(i);
 						}
-						catch (JsonSyntaxException e)
-						{
-							// create the error that will be reported
-							throw new UnexpectedResponseEntityException(e);
-						}
+						
+						return array;
 					}
 					else
 					{
@@ -494,6 +491,24 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	 * @return
 	 */
 	protected abstract RestRequestFactory getRestRequestFactory();
+	
+	private List<Object> parseResponseAsList(final byte[] response, final Class<?> objectClass) throws UnexpectedResponseEntityException
+	{
+		try
+		{
+			final List<Object> results = new ArrayList<>();
+			final JsonArray jsonArray = JsonParser.parseString(new String(response)).getAsJsonArray();
+			
+			jsonArray.forEach(jsonElement -> results.add(gson.fromJson(jsonElement, objectClass)));
+			
+			return results;
+		}
+		catch (JsonSyntaxException e)
+		{
+			// create the error that will be reported
+			throw new UnexpectedResponseEntityException(e);
+		}
+	}
 	
 	/**
 	 * Builds the URL based on the

@@ -33,9 +33,9 @@ public class ReturnType
 		return getActualClass().equals(List.class);
 	}
 	
-	public boolean hasGenerics()
+	public boolean isArray()
 	{
-		return type instanceof ParameterizedType;
+		return type.toString().endsWith("[]");
 	}
 	
 	public Class<?> getActualClass()
@@ -48,10 +48,20 @@ public class ReturnType
 		{
 			return (Class<?>) getTypeAsParameterizedType().get().getRawType();
 		}
+		else if (isArray())
+		{
+			try
+			{
+				return Class.forName(type.toString().substring(0, type.toString().length() - 2));
+			}
+			catch (ClassNotFoundException e)
+			{
+				throw new RuntimeException(e);
+			}
+		}
 		else
 		{
-			//:TODO: better way to handle this?
-			throw new IllegalStateException();
+			throw new RuntimeException();
 		}
 	}
 	
