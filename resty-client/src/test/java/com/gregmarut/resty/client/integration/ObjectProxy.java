@@ -8,7 +8,7 @@ import com.gregmarut.resty.annotation.RestProxy;
 import com.gregmarut.resty.exception.WebServiceException;
 import org.apache.http.HttpStatus;
 
-@RestProxy(strict = true)
+@RestProxy
 public interface ObjectProxy
 {
 	@RestMethod(uri = "/object/user", method = MethodType.GET)
