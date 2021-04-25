@@ -7,13 +7,16 @@
  ******************************************************************************/
 package com.gregmarut.resty;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import com.gregmarut.resty.annotation.Expected;
 import com.gregmarut.resty.annotation.HttpHeaders;
 import com.gregmarut.resty.annotation.HttpParameters;
 import com.gregmarut.resty.annotation.NameValue;
 import com.gregmarut.resty.annotation.Parameter;
 import com.gregmarut.resty.annotation.RestMethod;
-import com.gregmarut.resty.async.Async;
 import com.gregmarut.resty.async.CompletableAsync;
 import com.gregmarut.resty.authentication.AuthenticationProvider;
 import com.gregmarut.resty.exception.InvalidMethodTypeException;
@@ -25,9 +28,7 @@ import com.gregmarut.resty.exception.WebServiceException;
 import com.gregmarut.resty.exception.status.StatusCodeException;
 import com.gregmarut.resty.http.request.RestRequest;
 import com.gregmarut.resty.http.response.RestResponse;
-import com.gregmarut.resty.serialization.SerializationException;
-import com.gregmarut.resty.serialization.Serializer;
-import com.gregmarut.resty.util.ReflectionUtil;
+import com.gregmarut.resty.util.ReturnType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +38,8 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -54,6 +57,8 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	
 	public static final String REGEX_VAR = "\\{([a-zA-Z0-9\\.]+?)\\}";
 	public static final String REGEX_DOMAIN_URL = "^[a-zA-Z]+://([a-zA-Z0-9\\.\\-]+)";
+	
+	private final Gson gson;
 	
 	private final RestRequestExecutor restRequestExecutor;
 	
@@ -102,6 +107,7 @@ public abstract class RestInvocationHandler implements InvocationHandler
 		this.rootURL = rootURL;
 		this.restRequestExecutor = restRequestExecutor;
 		this.statusCodeHandler = statusCodeHandler;
+		this.gson = new Gson();
 		
 		//set a default async executor service
 		setAsyncExecutorService(Executors.newFixedThreadPool(4));
@@ -114,18 +120,18 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	public final Object invoke(final Object proxy, final Method method, final Object[] args) throws WebServiceException
 	{
 		// determine the expected return type
-		final Class<?> expectedReturnType = method.getReturnType();
+		final ReturnType methodReturnType = new ReturnType(method);
 		
 		//check to see if the expected return type is an async object
-		if (expectedReturnType.equals(Async.class))
+		if (methodReturnType.isAsync())
 		{
-			final Class<?> returnType = ReflectionUtil.extractFirstGenericClass(method).orElse(Object.class);
 			final CompletableAsync<?> async = new CompletableAsync<>();
+			final ReturnType genericReturnType = methodReturnType.getGenericReturnType().orElseGet(() -> new ReturnType(Object.class));
 			
 			asyncExecutorService.execute(() -> {
 				try
 				{
-					async.completeSuccessful(invoke(method, args, returnType));
+					async.completeSuccessful(invoke(method, args, genericReturnType));
 				}
 				catch (WebServiceException e)
 				{
@@ -138,11 +144,11 @@ public abstract class RestInvocationHandler implements InvocationHandler
 		else
 		{
 			// run synchronously
-			return invoke(method, args, expectedReturnType);
+			return invoke(method, args, methodReturnType);
 		}
 	}
 	
-	private Object invoke(final Method method, final Object[] args, final Class<?> returnType) throws WebServiceException
+	private Object invoke(final Method method, final Object[] args, final ReturnType returnType) throws WebServiceException
 	{
 		//check to see if this method is being invoked on the core Object class which are not expected to be annotated and are not rest method
 		if (method.getDeclaringClass().equals(Object.class))
@@ -212,9 +218,9 @@ public abstract class RestInvocationHandler implements InvocationHandler
 			try
 			{
 				// serialize the data
-				data = getSerializer().marshall(entity);
+				data = gson.toJson(entity).getBytes();
 			}
-			catch (SerializationException e)
+			catch (JsonSyntaxException e)
 			{
 				throw new WebServiceException(e);
 			}
@@ -356,12 +362,12 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	 * Handles the response that is returned from the http client
 	 *
 	 * @param restResponse
-	 * @param expectedReturnType
+	 * @param returnType
 	 * @return
 	 * @throws StatusCodeException
 	 * @throws WebServiceException
 	 */
-	protected Object handleResponse(final RestResponse restResponse, final Class<?> expectedReturnType,
+	protected Object handleResponse(final RestResponse restResponse, final ReturnType returnType,
 		final Expected expected) throws WebServiceException
 	{
 		Object result;
@@ -380,28 +386,49 @@ public abstract class RestInvocationHandler implements InvocationHandler
 		if (null != response)
 		{
 			// check to see if there is a return type
-			if (null != expectedReturnType && !expectedReturnType.equals(void.class))
+			if (!returnType.getActualClass().equals(void.class))
 			{
 				// using the status codes, check to see if this request was successful
 				if (statusCodeHandler.isSuccessful(statusCode, expectedStatusCode))
 				{
 					// check to see if the return type is a byte array
-					if (byte[].class.equals(expectedReturnType))
+					if (byte[].class.equals(returnType.getActualClass()))
 					{
 						result = response;
 					}
-					else if (String.class.equals(expectedReturnType))
+					else if (String.class.equals(returnType.getActualClass()))
 					{
 						result = new String(response);
+					}
+					else if (returnType.isList())
+					{
+						try
+						{
+							final Class<?> genericType = returnType.getGenericReturnType()
+								.orElseGet(() -> new ReturnType(Object.class))
+								.getActualClass();
+							
+							final List<Object> results = new ArrayList<>();
+							final JsonArray jsonArray = JsonParser.parseString(new String(response)).getAsJsonArray();
+							
+							jsonArray.forEach(jsonElement -> results.add(gson.fromJson(jsonElement, genericType)));
+							
+							result = results;
+						}
+						catch (JsonSyntaxException e)
+						{
+							// create the error that will be reported
+							throw new UnexpectedResponseEntityException(e);
+						}
 					}
 					else
 					{
 						try
 						{
 							// deserialize the result
-							result = getSerializer().unmarshall(response, expectedReturnType);
+							result = gson.fromJson(new String(response), returnType.getActualClass());
 						}
-						catch (SerializationException e)
+						catch (JsonSyntaxException e)
 						{
 							// create the error that will be reported
 							throw new UnexpectedResponseEntityException(e);
@@ -418,9 +445,9 @@ public abstract class RestInvocationHandler implements InvocationHandler
 						try
 						{
 							// attempt to deserialze the error message
-							errorResult = getSerializer().unmarshall(response, errorClass);
+							errorResult = gson.fromJson(new String(response), errorClass);
 						}
-						catch (SerializationException e)
+						catch (JsonSyntaxException e)
 						{
 							logger.warn(e.getMessage(), e);
 							logger.warn(new String(response));
@@ -438,9 +465,9 @@ public abstract class RestInvocationHandler implements InvocationHandler
 					try
 					{
 						// attempt to deserialze the error message
-						errorResult = getSerializer().unmarshall(response, errorClass);
+						errorResult = gson.fromJson(new String(response), errorClass);
 					}
-					catch (SerializationException e)
+					catch (JsonSyntaxException e)
 					{
 						logger.warn(e.getMessage(), e);
 						logger.warn(new String(response));
@@ -467,13 +494,6 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	 * @return
 	 */
 	protected abstract RestRequestFactory getRestRequestFactory();
-	
-	/**
-	 * Returns the serializer that is responsible for marshalling and unmarshalling data
-	 *
-	 * @return
-	 */
-	protected abstract Serializer getSerializer();
 	
 	/**
 	 * Builds the URL based on the
