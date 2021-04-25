@@ -1,4 +1,4 @@
-package com.gregmarut.resty;
+package com.gregmarut.resty.util;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;

@@ -27,6 +27,7 @@ import com.gregmarut.resty.http.request.RestRequest;
 import com.gregmarut.resty.http.response.RestResponse;
 import com.gregmarut.resty.serialization.SerializationException;
 import com.gregmarut.resty.serialization.Serializer;
+import com.gregmarut.resty.util.ReflectionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
