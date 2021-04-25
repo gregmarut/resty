@@ -41,9 +41,9 @@ public class WebServiceException extends Exception
 	/**
 	 * @return the error entity
 	 */
-	public Object getErrorEntity()
+	public <T> T getErrorEntity()
 	{
-		return errorEntity;
+		return (T) errorEntity;
 	}
 	
 	/**

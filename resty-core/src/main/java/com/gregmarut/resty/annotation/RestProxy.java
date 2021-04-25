@@ -25,5 +25,5 @@ public @interface RestProxy
 	 *
 	 * @return whether or not the proxy is strict
 	 */
-	boolean strict() default false;
+	boolean strict() default true;
 }
