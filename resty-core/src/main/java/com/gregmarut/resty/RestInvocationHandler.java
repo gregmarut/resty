@@ -13,6 +13,8 @@ import com.gregmarut.resty.annotation.HttpParameters;
 import com.gregmarut.resty.annotation.NameValue;
 import com.gregmarut.resty.annotation.Parameter;
 import com.gregmarut.resty.annotation.RestMethod;
+import com.gregmarut.resty.async.Async;
+import com.gregmarut.resty.async.CompletableAsync;
 import com.gregmarut.resty.authentication.AuthenticationProvider;
 import com.gregmarut.resty.exception.InvalidMethodTypeException;
 import com.gregmarut.resty.exception.InvalidVariablePathException;
@@ -35,6 +37,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URLEncoder;
 import java.util.StringTokenizer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,6 +55,9 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	public static final String REGEX_DOMAIN_URL = "^[a-zA-Z]+://([a-zA-Z0-9\\.\\-]+)";
 	
 	private final RestRequestExecutor restRequestExecutor;
+	
+	//holds the executor service to run async calls
+	private ExecutorService asyncExecutorService;
 	
 	// holds the pattern object for capturing uri variables
 	private final Pattern varPattern;
@@ -95,12 +102,46 @@ public abstract class RestInvocationHandler implements InvocationHandler
 		this.restRequestExecutor = restRequestExecutor;
 		this.statusCodeHandler = statusCodeHandler;
 		
+		//set a default async executor service
+		setAsyncExecutorService(Executors.newFixedThreadPool(4));
+		
 		varPattern = Pattern.compile(REGEX_VAR);
 		domainPattern = Pattern.compile(REGEX_DOMAIN_URL);
 	}
 	
 	@Override
 	public final Object invoke(final Object proxy, final Method method, final Object[] args) throws WebServiceException
+	{
+		// determine the expected return type
+		final Class<?> expectedReturnType = method.getReturnType();
+		
+		//check to see if the expected return type is an async object
+		if (expectedReturnType.equals(Async.class))
+		{
+			final Class<?> returnType = ReflectionUtil.extractFirstGenericClass(method).orElse(Object.class);
+			final CompletableAsync<?> async = new CompletableAsync<>();
+			
+			asyncExecutorService.execute(() -> {
+				try
+				{
+					async.completeSuccessful(invoke(method, args, returnType));
+				}
+				catch (WebServiceException e)
+				{
+					async.completeError(e);
+				}
+			});
+			
+			return async;
+		}
+		else
+		{
+			// run synchronously
+			return invoke(method, args, expectedReturnType);
+		}
+	}
+	
+	private Object invoke(final Method method, final Object[] args, final Class<?> returnType) throws WebServiceException
 	{
 		//check to see if this method is being invoked on the core Object class which are not expected to be annotated and are not rest method
 		if (method.getDeclaringClass().equals(Object.class))
@@ -116,10 +157,10 @@ public abstract class RestInvocationHandler implements InvocationHandler
 		}
 		
 		// extract the rest method annotation
-		RestMethod restMethod = method.getAnnotation(RestMethod.class);
+		final RestMethod restMethod = method.getAnnotation(RestMethod.class);
 		
 		// extract the expected annotation
-		Expected expected = method.getAnnotation(Expected.class);
+		final Expected expected = method.getAnnotation(Expected.class);
 		
 		// make sure there is an annotation
 		if (null == restMethod)
@@ -129,25 +170,22 @@ public abstract class RestInvocationHandler implements InvocationHandler
 		}
 		
 		// create a new parameter mapper
-		ParameterMapper parameterMapper = new ParameterMapper(method, args);
+		final ParameterMapper parameterMapper = new ParameterMapper(method, args);
 		
 		// build the uri
-		String url = buildURL(parameterMapper, restMethod, args);
+		final String url = buildURL(parameterMapper, restMethod, args);
 		
 		// create the request
-		RestRequest request = createRequest(url, parameterMapper.getBodyArgument(), restMethod.method());
+		final RestRequest request = createRequest(url, parameterMapper.getBodyArgument(), restMethod.method());
 		
 		// set the headers and parameters
 		setHeadersAndParameters(method, request, parameterMapper);
 		
 		// execute the request
-		RestResponse response = executeRequest(request, true);
-		
-		// determine the expected return type
-		Class<?> expectedReturnType = method.getReturnType();
+		final RestResponse response = executeRequest(request, true);
 		
 		// handle the response
-		return handleResponse(response, expectedReturnType, expected);
+		return handleResponse(response, returnType, expected);
 	}
 	
 	/**
@@ -546,6 +584,16 @@ public abstract class RestInvocationHandler implements InvocationHandler
 	public void setAuthenticationProvider(final AuthenticationProvider authenticationProvider)
 	{
 		this.authenticationProvider = authenticationProvider;
+	}
+	
+	public ExecutorService getAsyncExecutorService()
+	{
+		return asyncExecutorService;
+	}
+	
+	public void setAsyncExecutorService(final ExecutorService asyncExecutorService)
+	{
+		this.asyncExecutorService = asyncExecutorService;
 	}
 	
 	public RestRequestExecutor getRestRequestExecutor()

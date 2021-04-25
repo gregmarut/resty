@@ -9,6 +9,7 @@ package com.gregmarut.resty;
 
 import com.gregmarut.resty.annotation.RestMethod;
 import com.gregmarut.resty.annotation.RestProxy;
+import com.gregmarut.resty.async.Async;
 import com.gregmarut.resty.exception.InvalidProxyException;
 import com.gregmarut.resty.exception.WebServiceException;
 
@@ -69,8 +70,12 @@ public class RestProxyFactory<E extends RestInvocationHandler>
 						+ " is missing annotation " + RestMethod.class.getName());
 				}
 				
-				// validate that the method declares the webservice exception
-				validateThrowsExeception(method);
+				//check to see if the return type is not an async object
+				if (!method.getReturnType().equals(Async.class))
+				{
+					// validate that the method declares the webservice exception
+					validateThrowsException(method);
+				}
 			}
 		}
 		
@@ -86,7 +91,7 @@ public class RestProxyFactory<E extends RestInvocationHandler>
 	 *
 	 * @param method
 	 */
-	private void validateThrowsExeception(final Method method)
+	private void validateThrowsException(final Method method)
 	{
 		// retrieve the array of declared exception types
 		Class<?>[] exceptionTypes = method.getExceptionTypes();
