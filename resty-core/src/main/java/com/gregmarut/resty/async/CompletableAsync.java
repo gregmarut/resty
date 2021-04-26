@@ -8,7 +8,14 @@ public class CompletableAsync<T> extends Async<T>
 	{
 		if (null != onSuccess)
 		{
-			onSuccess.accept((T) object);
+			if (null != handler)
+			{
+				handler.accept(() -> onSuccess.accept((T) object));
+			}
+			else
+			{
+				onSuccess.accept((T) object);
+			}
 		}
 		
 		runFinally();
@@ -18,7 +25,14 @@ public class CompletableAsync<T> extends Async<T>
 	{
 		if (null != onError)
 		{
-			onError.accept(e);
+			if (null != handler)
+			{
+				handler.accept(() -> onError.accept(e));
+			}
+			else
+			{
+				onError.accept(e);
+			}
 		}
 		
 		runFinally();
@@ -28,7 +42,14 @@ public class CompletableAsync<T> extends Async<T>
 	{
 		if (null != onFinally)
 		{
-			onFinally.run();
+			if (null != handler)
+			{
+				handler.accept(onFinally);
+			}
+			else
+			{
+				onFinally.run();
+			}
 		}
 	}
 }

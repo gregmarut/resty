@@ -10,6 +10,8 @@ public class Async<T>
 	protected Consumer<WebServiceException> onError;
 	protected Runnable onFinally;
 	
+	protected Consumer<Runnable> handler;
+	
 	public Async<T> onSuccess(final Consumer<T> onSuccess)
 	{
 		this.onSuccess = onSuccess;
@@ -25,6 +27,12 @@ public class Async<T>
 	public Async<T> onFinally(final Runnable onFinally)
 	{
 		this.onFinally = onFinally;
+		return this;
+	}
+	
+	public Async<T> handler(final Consumer<Runnable> handler)
+	{
+		this.handler = handler;
 		return this;
 	}
 }
