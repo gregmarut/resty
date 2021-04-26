@@ -21,6 +21,16 @@ public class DummyObject
 		return null;
 	}
 	
+	public Async<byte[]> genericByteArray()
+	{
+		return null;
+	}
+	
+	public byte[] byteArray()
+	{
+		return null;
+	}
+	
 	public void noReturn()
 	{
 	

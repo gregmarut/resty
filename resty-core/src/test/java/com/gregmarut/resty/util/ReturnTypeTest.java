@@ -44,6 +44,23 @@ public class ReturnTypeTest
 	}
 	
 	@Test
+	public void checkAsyncGenericByteArray() throws NoSuchMethodException
+	{
+		final Method method = DummyObject.class.getDeclaredMethod("genericByteArray");
+		final ReturnType returnType = new ReturnType(method);
+		final ReturnType genericReturnType = returnType.getGenericReturnType().get();
+		Assert.assertEquals(byte[].class, genericReturnType.getActualClass());
+	}
+	
+	@Test
+	public void checkByteArray() throws NoSuchMethodException
+	{
+		final Method method = DummyObject.class.getDeclaredMethod("byteArray");
+		final ReturnType returnType = new ReturnType(method);
+		Assert.assertEquals(byte[].class, returnType.getActualClass());
+	}
+	
+	@Test
 	public void noReturnTest() throws NoSuchMethodException
 	{
 		final Method method = DummyObject.class.getDeclaredMethod("noReturn");
