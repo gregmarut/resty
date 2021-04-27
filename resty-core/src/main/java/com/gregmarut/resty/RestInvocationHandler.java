@@ -33,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -386,18 +385,21 @@ public abstract class RestInvocationHandler implements InvocationHandler
 		// check to see if there is a response
 		if (null != response)
 		{
+			//get the actual class that we expect the response to be
+			final Class<?> returnTypeClass = returnType.getActualClass();
+			
 			// check to see if there is a return type
-			if (!returnType.getActualClass().equals(void.class))
+			if (!returnTypeClass.equals(void.class))
 			{
 				// using the status codes, check to see if this request was successful
 				if (statusCodeHandler.isSuccessful(statusCode, expectedStatusCode))
 				{
 					// check to see if the return type is a byte array
-					if (byte[].class.equals(returnType.getActualClass()))
+					if (byte[].class.equals(returnTypeClass))
 					{
 						result = response;
 					}
-					else if (String.class.equals(returnType.getActualClass()))
+					else if (String.class.equals(returnTypeClass))
 					{
 						result = new String(response);
 					}
@@ -406,24 +408,12 @@ public abstract class RestInvocationHandler implements InvocationHandler
 						result = parseResponseAsList(response,
 							returnType.getGenericReturnType().orElseGet(() -> new ReturnType(Object.class)).getActualClass());
 					}
-					else if (returnType.isArray())
-					{
-						List<?> list = parseResponseAsList(response, returnType.getActualClass());
-						Object[] array = (Object[]) Array.newInstance(returnType.getActualClass(), list.size());
-						
-						for (int i = 0; i < list.size(); i++)
-						{
-							array[i] = list.get(i);
-						}
-						
-						return array;
-					}
 					else
 					{
 						try
 						{
 							// deserialize the result
-							result = gson.fromJson(new String(response), returnType.getActualClass());
+							result = gson.fromJson(new String(response), returnTypeClass);
 						}
 						catch (JsonSyntaxException e)
 						{

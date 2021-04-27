@@ -2,6 +2,8 @@ package com.gregmarut.resty.util;
 
 import com.gregmarut.resty.async.Async;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -33,11 +35,6 @@ public class ReturnType
 		return getActualClass().equals(List.class);
 	}
 	
-	public boolean isArray()
-	{
-		return type.toString().endsWith("[]");
-	}
-	
 	public Class<?> getActualClass()
 	{
 		if (getTypeAsClass().isPresent())
@@ -50,18 +47,32 @@ public class ReturnType
 		}
 		else if (isArray())
 		{
-			try
+			switch (type.toString())
 			{
-				return Class.forName(type.toString().substring(0, type.toString().length() - 2));
-			}
-			catch (ClassNotFoundException e)
-			{
-				throw new RuntimeException(e);
+				case "byte[]":
+					return byte[].class;
+				case "int[]":
+					return int[].class;
+				case "long[]":
+					return long[].class;
+				case "short[]":
+					return short[].class;
+				case "float[]":
+					return float[].class;
+				case "double[]":
+					return double[].class;
+				case "char[]":
+					return char[].class;
+				case "boolean[]":
+					return boolean[].class;
+				default:
+					final Class<?> componentClass = classFromArrayType(type);
+					return Array.newInstance(componentClass, 0).getClass();
 			}
 		}
 		else
 		{
-			throw new RuntimeException();
+			throw new RuntimeException("Unsupported type: " + type.getClass().getName());
 		}
 	}
 	
@@ -96,5 +107,28 @@ public class ReturnType
 	{
 		return Optional.ofNullable(parameterizedType.getActualTypeArguments())
 			.flatMap(types -> Arrays.stream(types).findFirst());
+	}
+	
+	private boolean isArray()
+	{
+		return type instanceof GenericArrayType || type.toString().endsWith("[]");
+	}
+	
+	/**
+	 * Given an "array type", this attempts to extract the class byte stripping off the trailing "[]" and instantiating that class
+	 *
+	 * @param type
+	 * @return
+	 */
+	private Class<?> classFromArrayType(final Type type)
+	{
+		try
+		{
+			return Class.forName(type.toString().substring(0, type.toString().length() - 2));
+		}
+		catch (ClassNotFoundException e)
+		{
+			throw new RuntimeException(e);
+		}
 	}
 }
