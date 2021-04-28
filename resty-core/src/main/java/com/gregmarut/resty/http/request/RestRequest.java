@@ -13,7 +13,7 @@ public class RestRequest
 	private final MethodType methodType;
 	private final Map<String, String> headers;
 	private final Map<String, String> parameters;
-	private byte[] data;
+	private RequestEntity requestEntity;
 	
 	public RestRequest(final String url, final MethodType methodType)
 	{
@@ -53,14 +53,14 @@ public class RestRequest
 		return parameters;
 	}
 	
-	public byte[] getData()
+	public RequestEntity getRequestEntity()
 	{
-		return data;
+		return requestEntity;
 	}
 	
-	public void setData(final byte[] data)
+	public void setRequestEntity(final RequestEntity requestEntity)
 	{
-		this.data = data;
+		this.requestEntity = requestEntity;
 	}
 	
 	public void setFormEncodedData(final Map<String, String> parameters, final String encoding) throws UnsupportedEncodingException
@@ -84,6 +84,6 @@ public class RestRequest
 			sb.append(value);
 		}
 		
-		setData(sb.toString().getBytes());
+		setRequestEntity(new ByteArrayEntity(sb.toString().getBytes()));
 	}
 }

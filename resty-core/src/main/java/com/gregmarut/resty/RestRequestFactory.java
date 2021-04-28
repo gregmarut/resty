@@ -9,6 +9,7 @@
  ******************************************************************************/
 package com.gregmarut.resty;
 
+import com.gregmarut.resty.http.request.RequestEntity;
 import com.gregmarut.resty.http.request.RestRequest;
 
 /**
@@ -66,13 +67,13 @@ public class RestRequestFactory
 	 * Create a new POST request
 	 *
 	 * @param uri
-	 * @param data
+	 * @param entity
 	 * @return
 	 */
-	public RestRequest createPostRequest(final String uri, final byte[] data)
+	public RestRequest createPostRequest(final String uri, final RequestEntity entity)
 	{
 		RestRequest restRequest = new RestRequest(uri, MethodType.POST);
-		restRequest.setData(data);
+		restRequest.setRequestEntity(entity);
 		setDefaultHeaders(restRequest);
 		
 		return restRequest;
@@ -96,13 +97,13 @@ public class RestRequestFactory
 	 * Create a new PUT request
 	 *
 	 * @param uri
-	 * @param data
+	 * @param entity
 	 * @return
 	 */
-	public RestRequest createPutRequest(final String uri, final byte[] data)
+	public RestRequest createPutRequest(final String uri, final RequestEntity entity)
 	{
 		RestRequest restRequest = new RestRequest(uri, MethodType.PUT);
-		restRequest.setData(data);
+		restRequest.setRequestEntity(entity);
 		setDefaultHeaders(restRequest);
 		
 		return restRequest;

@@ -2,6 +2,9 @@ package com.gregmarut.resty.android;
 
 import com.gregmarut.resty.RestRequestExecutor;
 import com.gregmarut.resty.exception.WebServiceException;
+import com.gregmarut.resty.http.request.ByteArrayEntity;
+import com.gregmarut.resty.http.request.MultipartEntity;
+import com.gregmarut.resty.http.request.RequestEntity;
 import com.gregmarut.resty.http.request.RestRequest;
 import com.gregmarut.resty.http.response.RestResponse;
 import com.gregmarut.resty.http.response.RestResponseBuilder;
@@ -47,7 +50,7 @@ public class URLRestRequestExecutor implements RestRequestExecutor
 		try
 		{
 			//open a new url connection for this request
-			HttpURLConnection httpURLConnection = openUrlConnection(request);
+			final HttpURLConnection httpURLConnection = openUrlConnection(request);
 			
 			final int responseCode = httpURLConnection.getResponseCode();
 			final byte[] data = IOUtils.toByteArray(readStream(httpURLConnection, responseCode));
@@ -99,10 +102,10 @@ public class URLRestRequestExecutor implements RestRequestExecutor
 	private HttpURLConnection openUrlConnection(final RestRequest request) throws IOException
 	{
 		//create a new url object
-		URL url = new URL(request.getUrl());
+		final URL url = new URL(request.getUrl());
 		
 		//open a new url connection
-		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+		final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 		connection.setRequestMethod(request.getMethodType().toString());
 		connection.setConnectTimeout(timeout);
 		connection.setReadTimeout(timeout);
@@ -115,14 +118,31 @@ public class URLRestRequestExecutor implements RestRequestExecutor
 		}
 		
 		//check to see if there is a data object to send
-		if (null != request.getData())
+		final RequestEntity entity = request.getRequestEntity();
+		if (null != entity)
 		{
-			//write the data to the output stream
-			connection.setDoOutput(true);
-			OutputStream os = connection.getOutputStream();
-			IOUtils.write(request.getData(), os);
+			if (entity instanceof ByteArrayEntity)
+			{
+				handleEntity((ByteArrayEntity) entity, connection);
+			}
+			else if (entity instanceof MultipartEntity)
+			{
+				MultipartUtil.writeMultipart(connection, (MultipartEntity) entity);
+			}
+			else
+			{
+				throw new IllegalArgumentException("Unsupported request entity: " + entity.getClass());
+			}
 		}
 		
 		return connection;
+	}
+	
+	private void handleEntity(final ByteArrayEntity byteArrayEntity, final HttpURLConnection connection) throws IOException
+	{
+		//write the data to the output stream
+		connection.setDoOutput(true);
+		OutputStream os = connection.getOutputStream();
+		IOUtils.write(byteArrayEntity.getBytes(), os);
 	}
 }

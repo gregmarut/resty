@@ -26,6 +26,8 @@ import com.gregmarut.resty.exception.UnexpectedEntityException;
 import com.gregmarut.resty.exception.UnexpectedResponseEntityException;
 import com.gregmarut.resty.exception.WebServiceException;
 import com.gregmarut.resty.exception.status.StatusCodeException;
+import com.gregmarut.resty.http.request.ByteArrayEntity;
+import com.gregmarut.resty.http.request.RequestEntity;
 import com.gregmarut.resty.http.request.RestRequest;
 import com.gregmarut.resty.http.response.RestResponse;
 import com.gregmarut.resty.util.ReturnType;
@@ -211,23 +213,30 @@ public abstract class RestInvocationHandler implements InvocationHandler
 		RestRequest request;
 		
 		// holds the entity data to send
-		byte[] data;
+		RequestEntity requestEntity;
 		
 		if (null != entity)
 		{
-			try
+			if (RequestEntity.class.isAssignableFrom(entity.getClass()))
 			{
-				// serialize the data
-				data = gson.toJson(entity).getBytes();
+				requestEntity = (RequestEntity) entity;
 			}
-			catch (JsonSyntaxException e)
+			else
 			{
-				throw new WebServiceException(e);
+				try
+				{
+					// serialize the data
+					requestEntity = new ByteArrayEntity(gson.toJson(entity).getBytes());
+				}
+				catch (JsonSyntaxException e)
+				{
+					throw new WebServiceException(e);
+				}
 			}
 		}
 		else
 		{
-			data = null;
+			requestEntity = null;
 		}
 		
 		// switch based on the request type
@@ -246,11 +255,11 @@ public abstract class RestInvocationHandler implements InvocationHandler
 				break;
 			
 			case POST:
-				request = getRestRequestFactory().createPostRequest(url, data);
+				request = getRestRequestFactory().createPostRequest(url, requestEntity);
 				break;
 			
 			case PUT:
-				request = getRestRequestFactory().createPutRequest(url, data);
+				request = getRestRequestFactory().createPutRequest(url, requestEntity);
 				break;
 			
 			case DELETE:

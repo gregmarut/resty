@@ -3,6 +3,8 @@ package com.gregmarut.resty.client;
 import com.gregmarut.resty.RestRequestExecutor;
 import com.gregmarut.resty.exception.UnexpectedResponseEntityException;
 import com.gregmarut.resty.exception.WebServiceException;
+import com.gregmarut.resty.http.request.MultipartEntity;
+import com.gregmarut.resty.http.request.RequestEntity;
 import com.gregmarut.resty.http.request.RestRequest;
 import com.gregmarut.resty.http.response.RestResponse;
 import com.gregmarut.resty.http.response.RestResponseBuilder;
@@ -15,6 +17,8 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 
 import java.io.ByteArrayOutputStream;
@@ -109,18 +113,18 @@ public class HttpRestRequestExecutor implements RestRequestExecutor
 			case POST:
 				HttpPost httpPost = new HttpPost(restRequest.getUrl());
 				//make sure the data is not null
-				if (null != restRequest.getData())
+				if (null != restRequest.getRequestEntity())
 				{
-					httpPost.setEntity(new ByteArrayEntity(restRequest.getData()));
+					httpPost.setEntity(toHttpEntity(restRequest.getRequestEntity()));
 				}
 				httpUriRequest = httpPost;
 				break;
 			case PUT:
 				HttpPut httpPut = new HttpPut(restRequest.getUrl());
 				//make sure the data is not null
-				if (null != restRequest.getData())
+				if (null != restRequest.getRequestEntity())
 				{
-					httpPut.setEntity(new ByteArrayEntity(restRequest.getData()));
+					httpPut.setEntity(toHttpEntity(restRequest.getRequestEntity()));
 				}
 				httpUriRequest = httpPut;
 				break;
@@ -138,6 +142,34 @@ public class HttpRestRequestExecutor implements RestRequestExecutor
 		}
 		
 		return httpUriRequest;
+	}
+	
+	private HttpEntity toHttpEntity(final RequestEntity entity)
+	{
+		if (entity instanceof com.gregmarut.resty.http.request.ByteArrayEntity)
+		{
+			return new ByteArrayEntity(((com.gregmarut.resty.http.request.ByteArrayEntity) entity).getBytes());
+		}
+		else if (entity instanceof MultipartEntity)
+		{
+			final MultipartEntity multipartEntity = (MultipartEntity) entity;
+			
+			final MultipartEntityBuilder builder = MultipartEntityBuilder.create()
+				.addBinaryBody("file", multipartEntity.getContents(), ContentType.create("application/octet-stream"),
+					multipartEntity.getFileName());
+			
+			//for each of the additional params
+			for (Map.Entry<String, String> entry : multipartEntity.getParams().entrySet())
+			{
+				builder.addTextBody(entry.getKey(), entry.getValue());
+			}
+			
+			return builder.build();
+		}
+		else
+		{
+			throw new IllegalArgumentException("Unsupported request entity: " + entity.getClass());
+		}
 	}
 	
 	public HttpClientFactory getHttpClientFactory()

@@ -51,7 +51,7 @@
 		<version.gson>2.8.6</version.gson>
 		<version.commonsio>2.6</version.commonsio>
 		<version.commonscodec>1.13</version.commonscodec>
-		<version.apachehttp>4.5.10</version.apachehttp>
+		<version.apachehttp>4.5.13</version.apachehttp>
 
 		<!-- Test Dependency Versions -->
 		<version.spring.security>5.3.3.RELEASE</version.spring.security>

@@ -21,6 +21,11 @@
 			<artifactId>httpclient</artifactId>
 			<version>${version.apachehttp}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpmime</artifactId>
+			<version>${version.apachehttp}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.gregmarut.resty</groupId>
