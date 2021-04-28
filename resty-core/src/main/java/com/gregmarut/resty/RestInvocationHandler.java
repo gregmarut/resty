@@ -289,20 +289,16 @@ public abstract class RestInvocationHandler implements InvocationHandler
 		if (null != httpHeaders)
 		{
 			// retrieve the array of name value pairs
-			NameValue[] nameValues = httpHeaders.value();
+			final NameValue[] nameValues = httpHeaders.value();
 			
-			// make sure the name value pairs are not null
-			if (null != nameValues)
+			// for each of the name values
+			for (NameValue nameValue : nameValues)
 			{
-				// for each of the name values
-				for (NameValue nameValue : nameValues)
+				// make sure this name value is not null
+				if (null != nameValue)
 				{
-					// make sure this name value is not null
-					if (null != nameValue)
-					{
-						// set the header
-						request.setHeader(nameValue.name(), replaceVariables(nameValue.value(), parameterMapper));
-					}
+					// set the header
+					request.setHeader(nameValue.name(), replaceVariables(nameValue.value(), parameterMapper));
 				}
 			}
 		}
@@ -311,20 +307,16 @@ public abstract class RestInvocationHandler implements InvocationHandler
 		if (null != httpParameters)
 		{
 			// retrieve the array of name value pairs
-			NameValue[] nameValues = httpParameters.value();
+			final NameValue[] nameValues = httpParameters.value();
 			
-			// make sure the name value pairs are not null
-			if (null != nameValues)
+			// for each of the name values
+			for (NameValue nameValue : nameValues)
 			{
-				// for each of the name values
-				for (NameValue nameValue : nameValues)
+				// make sure this name value is not null
+				if (null != nameValue)
 				{
-					// make sure this name value is not null
-					if (null != nameValue)
-					{
-						// set the parameter
-						request.setParameter(nameValue.name(), replaceVariables(nameValue.value(), parameterMapper));
-					}
+					// set the parameter
+					request.setParameter(nameValue.name(), replaceVariables(nameValue.value(), parameterMapper));
 				}
 			}
 		}
