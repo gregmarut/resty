@@ -54,10 +54,10 @@
 		<version.apachehttp>4.5.10</version.apachehttp>
 
 		<!-- Test Dependency Versions -->
-		<version.spring.security>4.0.2.RELEASE</version.spring.security>
+		<version.spring.security>5.3.3.RELEASE</version.spring.security>
 		<version.cglib>3.1</version.cglib>
 		<version.servlet-api>3.1.0</version.servlet-api>
-		<version.spring>4.2.0.RELEASE</version.spring>
+		<version.spring>5.2.7.RELEASE</version.spring>
 		<version.jackson>1.9.13</version.jackson>
 		<version.slf4j>1.7.12</version.slf4j>
 	</properties>
