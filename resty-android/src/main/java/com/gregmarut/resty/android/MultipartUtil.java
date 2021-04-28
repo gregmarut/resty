@@ -27,8 +27,7 @@ public class MultipartUtil
 		
 		DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream());
 		outputStream.writeBytes(twoHyphens + boundary + lineEnd);
-		outputStream.writeBytes("Content-Disposition: form-data; name=\"" + multipartEntity.getFileName() +
-			"\"; filename=\"" + multipartEntity.getFileName() + "\"" + lineEnd);
+		outputStream.writeBytes("Content-Disposition: form-data; name=\"file\"; filename=\"" + multipartEntity.getFileName() + "\"" + lineEnd);
 		outputStream.writeBytes("Content-Type: " + MIME_OCTET_STREAM + lineEnd);
 		
 		outputStream.writeBytes("Content-Transfer-Encoding: binary" + lineEnd);
